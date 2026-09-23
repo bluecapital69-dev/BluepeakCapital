@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=yes" />
+    <meta name="description" content="BluepeakCapital - Professional cryptocurrency trading interface" />
+    <title>BluepeakCapital | Trade</title>
+    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,20 80,40 80,70 50,90 20,70 20,40' fill='%233b82f6'/%3E%3C/svg%3E" />
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
+    
+    <script>
+        function initTheme() {
+            const savedTheme = localStorage.getItem('bluepeak_theme');
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('bluepeak_theme', 'dark');
+            }
+        }
+        initTheme();
+    </script>
+    
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+        const supabaseUrl = 'https://txcbfzcomfyavcgqcevq.supabase.co'
+        const supabaseAnonKey = 'sb_publishable_6-gQnlgqnM20wQ9iWx5lsw_ZD7Uz5bH'
+        const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+        let currentUserId = null
+        let userBalances = { USD: 0, BTC: 0, ETH: 0, SOL: 0, AVAX: 0 }
+        let userOrders = []
+        let userTrades = []
+
+        // Make these available globally
+        window.userBalances = userBalances
+
+        async function checkAuthAndLoadData() {
+            const { data: { session } } = await supabase.auth.getSession()
+            
+            if (!session) {
+                window.location.href = 'login.html'
+                return
+            }
+            
+            currentUserId = session.user.id
+            await loadUserBalances()
+            await loadUserOrders()
+            await loadUserTrades()
+            
+            updateBalanceDisplay()
+            
+            console.log('User Balances loaded:', userBalances)
+        }
+        
+        async function loadUserBalances() {
+            const { data, error } = await supabase
+                .from('user_balances')
+                .select('*')
+                .eq('user_id', currentUserId)
+            
+            if (error) {
+                console.error('Error loading balances:', error)
+                return
+            }
+            
+            if (data && data.length > 0) {
+                data.forEach(balance => {
+                    userBalances[balance.asset] = parseFloat(balance.balance) || 0
+                })
+            }
+            
+            if (!userBalances.USD) userBalances.USD = 0
+            
+            window.userBalances = userBalances
+            
+            console.log('Final balances:', userBalances)
+            updateBalanceDisplay()
+        }
+        
+        async function loadUserOrders() {
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('user_id', currentUserId)
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false })
+                
+                if (error) {
+                    console.error('Error loading orders:', error)
+                    return
+                }
+                
+                userOrders = data || []
+                console.log('Orders loaded:', userOrders)
+                renderOpenOrders()
+            } catch (e) {
+                console.error('Error loading orders:', e)
+            }
+        }
+        
+        async function loadUserTrades() {
+            try {
+                const { data, error } = await supabase
+                    .from('trades')
+                    .select('*')
+                    .eq('user_id', currentUserId)
+                    .order('created_at', { ascending: false })
+                    .limit(20)
+                
+                if (error) {
+                    console.error('Error loading trades:', error)
+                    return
+                }
+                
+                userTrades = data || []
+                console.log('Trades loaded:', userTrades)
+                renderRecentTrades()
+            } catch (e) {
+                console.error('Error loading trades:', e)
+            }
+        }
+        
+        function updateBalanceDisplay() {
+            const availableSpan = document.getElementById('availableBalance')
+            if (availableSpan) {
+                const pairAsset = window.currentPair ? window.currentPair.split('/')[0] : 'BTC'
+                const balance = userBalances[pairAsset] || 0
+                availableSpan.innerHTML = `${balance.toFixed(4)} ${pairAsset}`
+            }
+            
+            const usdBalance = userBalances.USD || 0
+            const balanceDisplay = document.getElementById('topBalanceDisplay')
+            if (balanceDisplay) balanceDisplay.innerHTML = `$${usdBalance.toFixed(2)}`
+            
+            if (window.updateCalculations) window.updateCalculations()
+        }
+        
+        async function saveOrderToDatabase(pair, type, orderType, price, amount, status = 'pending') {
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .insert({
+                        user_id: currentUserId,
+                        pair: pair,
+                        type: type,
+                        order_type: orderType,
+                        price: price,
+                        amount: amount,
+                        filled: 0,
+                        status: status,
+                        created_at: new Date().toISOString()
+                    })
+                    .select()
+                
+                if (error) {
+                    console.error('Error saving order:', error)
+                    showToast('Failed to place order: ' + error.message)
+                    return null
+                }
+                
+                return data?.[0]
+            } catch (e) {
+                console.error('Error:', e)
+                showToast('Failed to place order')
+                return null
+            }
+        }
+        
+        async function updateUserBalances(asset, amount, isBuy) {
+            const currentBalance = userBalances[asset] || 0
+            const newBalance = isBuy ? currentBalance + amount : currentBalance - amount
+            
+            const { error } = await supabase
+                .from('user_balances')
+                .upsert({
+                    user_id: currentUserId,
+                    asset: asset,
+                    balance: newBalance,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id, asset' })
+            
+            if (error) {
+                console.error('Error updating balance:', error)
+                return false
+            }
+            
+            userBalances[asset] = newBalance
+            window.userBalances = userBalances
+            return true
+        }
+        
+        async function saveTradeToHistory(pair, type, price, amount, total, fee) {
+            try {
+                const { error } = await supabase
+                    .from('trades')
+                    .insert({
+                        user_id: currentUserId,
+                        pair: pair,
+                        type: type,
+                        price: price,
+                        amount: amount,
+                        total: total,
+                        fee: fee,
+                        created_at: new Date().toISOString()
+                    })
+                
+                if (error) {
+                    console.error('Error saving trade:', error)
+                }
+            } catch (e) {
+                console.error('Error:', e)
+            }
+        }
+        
+        window.executeMarketOrder = async function(amount, price, total) {
+            const pairAsset = window.currentPair ? window.currentPair.split('/')[0] : 'BTC'
+            const orderType = window.currentOrderType || 'buy'
+            
+            console.log('Executing order:', { currentOrderType: orderType, amount, price, total, pairAsset, userBalances })
+            
+            if (orderType === 'buy') {
+                if (total > userBalances.USD) {
+                    showToast(`Insufficient USD balance. Available: $${userBalances.USD.toFixed(2)}`)
+                    return false
+                }
+                
+                await updateUserBalances('USD', total, false)
+                await updateUserBalances(pairAsset, amount, true)
+                
+            } else {
+                if (amount > (userBalances[pairAsset] || 0)) {
+                    showToast(`Insufficient ${pairAsset} balance. Available: ${(userBalances[pairAsset] || 0).toFixed(4)}`)
+                    return false
+                }
+                
+                await updateUserBalances(pairAsset, amount, false)
+                await updateUserBalances('USD', total, true)
+            }
+            
+            const fee = total * 0.001
+            await saveTradeToHistory(window.currentPair, orderType, price, amount, total, fee)
+            await loadUserTrades()
+            updateBalanceDisplay()
+            
+            showToast(`${orderType.toUpperCase()} order executed! ${amount} ${pairAsset} at $${price}`)
+            return true
+        }
+        
+        window.saveLimitOrder = async function(amount, price) {
+            const orderType = document.getElementById('orderType').value
+            const order = await saveOrderToDatabase(
+                window.currentPair,
+                window.currentOrderType,
+                orderType,
+                price,
+                amount,
+                'pending'
+            )
+            
+            if (order) {
+                userOrders.unshift(order)
+                renderOpenOrders()
+                showToast(`${window.currentOrderType.toUpperCase()} limit order placed for ${amount} ${window.currentPair.split('/')[0]} at $${price}`)
+                return true
+            }
+            return false
+        }
+        
+        window.cancelOrder = async function(orderId) {
+            try {
+                const { error } = await supabase
+                    .from('orders')
+                    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+                    .eq('id', orderId)
+                    .eq('user_id', currentUserId)
+                
+                if (error) {
+                    console.error('Error cancelling order:', error)
+                    showToast('Failed to cancel order')
+                    return
+                }
+                
+                userOrders = userOrders.filter(o => o.id !== orderId)
+                renderOpenOrders()
+                showToast('Order cancelled')
+            } catch (e) {
+                console.error('Error:', e)
+                showToast('Failed to cancel order')
+            }
+        }
+        
+        window.renderOpenOrders = function() {
+            const container = document.getElementById('openOrdersList')
+            if (!container) {
+                console.error('openOrdersList container not found')
+                return
+            }
+            
+            if (!userOrders || userOrders.length === 0) {
+                container.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 1rem; color: var(--text-secondary);">No open orders</td></tr>'
+                return
+            }
+            
+            container.innerHTML = userOrders.map(order => `
+                <tr>
+                    <td>${order.pair}</td>
+                    <td class="${order.type === 'buy' ? 'positive' : 'negative'}">${order.type.toUpperCase()}</td>
+                    <td>$${order.price}</td>
+                    <td>${order.amount}</td>
+                    <td>${order.filled || 0}/${order.amount}</td>
+                    <td><button class="cancel-btn" onclick="window.cancelOrder('${order.id}')">Cancel</button></td>
+                </tr>
+            `).join('')
+            
+            console.log('Open orders rendered:', userOrders.length)
+        }
+        
+        window.renderRecentTrades = function() {
+            const container = document.getElementById('tradesList')
+            if (!container) {
+                console.error('tradesList container not found')
+                return
+            }
+            
+            if (!userTrades || userTrades.length === 0) {
+                container.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 1rem; color: var(--text-secondary);">No recent trades</td></tr>'
+                return
+            }
+            
+            container.innerHTML = userTrades.slice(0, 10).map(trade => `
+                <tr>
+                    <td>${new Date(trade.created_at).toLocaleTimeString()}</td>
+                    <td class="${trade.type === 'buy' ? 'positive' : 'negative'}">$${trade.price}</td>
+                    <td>${trade.amount}</td>
+                </tr>
+            `).join('')
+            
+            console.log('Recent trades rendered:', userTrades.length)
+        }
+        
+        window.loadUserBalances = loadUserBalances
+        window.updateBalanceDisplay = updateBalanceDisplay
+        window.userBalances = userBalances
+        window.userTrades = userTrades
+        window.userOrders = userOrders
+        
+        checkAuthAndLoadData()
+    </script>
+    
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1f2937;
+            --bg-input: #374151;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+            --nav-bg: #111827;
+            --hover-bg: #374151;
+            --positive: #10b981;
+            --negative: #ef4444;
+            --buy-color: #10b981;
+            --sell-color: #ef4444;
+            --bid-color: #10b981;
+            --ask-color: #ef4444;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f5f7fb;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #f8fafc;
+            --text-primary: #1a1f36;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --nav-bg: #ffffff;
+            --hover-bg: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: #3b82f6;
+        }
+
+        .right-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .flag-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .balance-display {
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+            background: var(--hover-bg);
+            padding: 0.25rem 0.7rem;
+            border-radius: 30px;
+        }
+
+        .hamburger-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            display: none;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .sidebar-menu {
+            position: fixed;
+            top: 0;
+            right: -280px;
+            width: 260px;
+            height: 100%;
+            background: var(--bg-secondary);
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+            z-index: 2001;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem 0;
+        }
+
+        .sidebar-overlay.active .sidebar-menu {
+            right: 0;
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 0.8rem 1.2rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .sidebar-menu a:hover {
+            background: var(--hover-bg);
+            color: #3b82f6;
+        }
+
+        .trading-container {
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .pair-selector-mobile {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .current-pair {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .pair-select {
+            padding: 0.3rem 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-size: 0.75rem;
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .chart-header {
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .timeframes {
+            display: flex;
+            gap: 0.2rem;
+            flex-wrap: wrap;
+        }
+
+        .timeframe-btn {
+            padding: 0.2rem 0.5rem;
+            font-size: 0.6rem;
+            border: none;
+            background: var(--hover-bg);
+            color: var(--text-primary);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .timeframe-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        #tradingview_chart {
+            height: 500px !important;
+            width: 100%;
+            min-height: 400px;
+        }
+
+        .order-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .order-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .order-tab {
+            flex: 1;
+            padding: 0.6rem;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .order-tab.buy.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border-bottom: 2px solid #10b981;
+        }
+
+        .order-tab.sell.active {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border-bottom: 2px solid #ef4444;
+        }
+
+        .order-form {
+            padding: 0.8rem 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 0.8rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.2rem;
+        }
+
+        .order-type-select, .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .percentage-buttons {
+            display: flex;
+            gap: 0.4rem;
+            margin-top: 0.4rem;
+        }
+
+        .perc-btn {
+            flex: 1;
+            padding: 0.25rem;
+            background: var(--hover-bg);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.65rem;
+            color: var(--text-primary);
+        }
+
+        .order-total {
+            background: var(--bg-input);
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            margin: 0.8rem 0;
+            font-size: 0.75rem;
+        }
+
+        .order-total div {
+            color: var(--text-primary);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.6rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .submit-btn.buy {
+            background: #10b981;
+            color: white;
+        }
+
+        .submit-btn.sell {
+            background: #ef4444;
+            color: white;
+        }
+
+        .bottom-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .bottom-tab {
+            flex: 1;
+            padding: 0.5rem;
+            text-align: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .bottom-tab.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .bottom-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .bottom-panel.active {
+            display: block;
+        }
+
+        .panel-header {
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+        }
+
+        .orderbook-table, .trades-table, .orders-table {
+            width: 100%;
+            font-size: 0.7rem;
+            border-collapse: collapse;
+        }
+
+        .orderbook-table th, .trades-table th, .orders-table th {
+            padding: 0.4rem 0.6rem;
+            text-align: left;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .orderbook-table td, .trades-table td, .orders-table td {
+            padding: 0.3rem 0.6rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .bid { color: #10b981; }
+        .ask { color: #ef4444; }
+
+        .cancel-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.6rem;
+        }
+
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            #tradingview_chart {
+                height: 350px !important;
+            }
+            .nav-links {
+                display: none;
+            }
+            .hamburger-btn {
+                display: block;
+            }
+            .right-menu {
+                gap: 0.3rem;
+            }
+            .balance-display {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.6rem;
+            }
+            .flag-icon {
+                width: 22px;
+                height: 22px;
+            }
+            .chart-header {
+                padding: 0.4rem;
+            }
+            .order-form {
+                padding: 0.6rem 0.8rem;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .pair-selector-mobile {
+                display: none;
+            }
+            .bottom-tabs {
+                display: none;
+            }
+            .bottom-panel {
+                display: block !important;
+            }
+            .desktop-bottom-grid {
+                display: flex;
+                gap: 1rem;
+                margin-top: 1rem;
+            }
+            .desktop-bottom-grid > div {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo" onclick="location.href='index.html'">
+            <div class="logo-icon">⛰️</div>
+            <div class="logo-text">BluepeakCapital</div>
+        </div>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="markets.html">Markets</a>
+            <a href="orders.html">Orders</a>
+            <a href="bots.html">Bots</a>
+            <a href="deposit.html">Deposit</a>
+            <a href="withdraw.html">Withdraw</a>
+            <a href="settings.html">Settings</a>
+            <a href="support.html">Support</a>
+        </div>
+        <div class="right-menu">
+            <img src="https://flagcdn.com/w320/us.png" alt="USD" class="flag-icon" onclick="showToast('Currency: USD')">
+            <div class="balance-display" id="topBalanceDisplay">$0.00</div>
+            <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+        </div>
+    </nav>
+
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()">
+        <div class="sidebar-menu" onclick="event.stopPropagation()">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">⛰️</div>
+                    <div class="logo-text">BluepeakCapital</div>
+                </div>
+            </div>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="markets.html">Markets</a>
+            <a href="orders.html">Orders</a>
+            <a href="bots.html">Bots</a>
+            <a href="deposit.html">Deposit</a>
+            <a href="withdraw.html">Withdraw</a>
+            <a href="settings.html">Settings</a>
+            <a href="support.html">Support</a>
+        </div>
+    </div>
+
+    <div class="trading-container">
+        <div class="pair-selector-mobile">
+            <span class="current-pair" id="currentPairDisplay">BTC/USD</span>
+            <select class="pair-select" id="mobilePairSelect" onchange="mobilePairChange()">
+                <option value="BTC/USD">BTC/USD</option>
+                <option value="ETH/USD">ETH/USD</option>
+                <option value="SOL/USD">SOL/USD</option>
+                <option value="AVAX/USD">AVAX/USD</option>
+            </select>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="timeframes" id="timeframes">
+                    <button class="timeframe-btn" data-tf="1">1m</button>
+                    <button class="timeframe-btn" data-tf="5">5m</button>
+                    <button class="timeframe-btn" data-tf="15">15m</button>
+                    <button class="timeframe-btn active" data-tf="60">1h</button>
+                    <button class="timeframe-btn" data-tf="240">4h</button>
+                    <button class="timeframe-btn" data-tf="D">1D</button>
+                    <button class="timeframe-btn" data-tf="W">1W</button>
+                </div>
+                <select id="indicatorSelect" onchange="addIndicator()" style="background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.2rem 0.4rem;">
+                    <option value="">+ Indicator</option>
+                    <option value="RSI">RSI</option>
+                    <option value="MACD">MACD</option>
+                    <option value="MA">Moving Average</option>
+                    <option value="BB">Bollinger Bands</option>
+                </select>
+            </div>
+            <div id="tradingview_chart"></div>
+        </div>
+
+        <div class="order-container">
+            <div class="order-tabs">
+                <div class="order-tab buy active" onclick="setOrderType('buy')">BUY</div>
+                <div class="order-tab sell" onclick="setOrderType('sell')">SELL</div>
+            </div>
+            <div class="order-form">
+                <div class="form-group">
+                    <label>Order Type</label>
+                    <select class="order-type-select" id="orderType">
+                        <option value="market">Market</option>
+                        <option value="limit">Limit</option>
+                        <option value="stop">Stop Loss</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label id="amountLabel">Amount (BTC)</label>
+                    <input type="number" id="amount" placeholder="0.000" step="0.001" value="0.01">
+                    <div class="percentage-buttons">
+                        <button class="perc-btn" onclick="setPercentage(25)">25%</button>
+                        <button class="perc-btn" onclick="setPercentage(50)">50%</button>
+                        <button class="perc-btn" onclick="setPercentage(75)">75%</button>
+                        <button class="perc-btn" onclick="setPercentage(100)">100%</button>
+                    </div>
+                </div>
+                <div class="form-group" id="priceGroup">
+                    <label>Price (USD)</label>
+                    <input type="number" id="price" placeholder="0.00" step="1" value="43250">
+                </div>
+                <div class="order-total">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Total:</span>
+                        <span id="totalValue">$432.50</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+                        <span>Fee (0.1%):</span>
+                        <span id="feeValue">$0.43</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+                        <span>Available:</span>
+                        <span id="availableBalance">0.000 BTC</span>
+                    </div>
+                </div>
+                <button class="submit-btn buy" id="submitBtn" onclick="submitOrder()">BUY BTC</button>
+            </div>
+        </div>
+
+        <div class="bottom-tabs">
+            <button class="bottom-tab active" onclick="switchBottomTab('orderbook')">Order Book</button>
+            <button class="bottom-tab" onclick="switchBottomTab('trades')">Recent Trades</button>
+            <button class="bottom-tab" onclick="switchBottomTab('orders')">Open Orders</button>
+        </div>
+
+        <div class="desktop-bottom-grid">
+            <div id="orderbookPanel" class="bottom-panel active">
+                <div class="panel-header">Order Book <span id="spreadDisplay"></span></div>
+                <table class="orderbook-table">
+                    <thead><tr><th>Price (USD)</th><th>Size</th><th>Total</th></tr></thead>
+                    <tbody id="askOrders"></tbody>
+                    <tbody id="bidOrders"></tbody>
+                </table>
+            </div>
+
+            <div id="tradesPanel" class="bottom-panel">
+                <div class="panel-header">Recent Trades</div>
+                <table class="trades-table">
+                    <thead><tr><th>Time</th><th>Price</th><th>Size</th></tr></thead>
+                    <tbody id="tradesList"></tbody>
+                </table>
+            </div>
+
+            <div id="ordersPanel" class="bottom-panel">
+                <div class="panel-header">Open Orders</div>
+                <table class="orders-table">
+                    <thead><tr><th>Pair</th><th>Type</th><th>Price</th><th>Amount</th><th>Filled</th><th></th></tr></thead>
+                    <tbody id="openOrdersList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPair = "BTC/USD"
+        let currentPrice = 43250
+        let currentOrderType = "buy"
+        let tvWidget = null
+        
+        const markets = [
+            { symbol: "BTC/USD", name: "Bitcoin", price: 43250, change: 2.4 },
+            { symbol: "ETH/USD", name: "Ethereum", price: 2250, change: 1.8 },
+            { symbol: "SOL/USD", name: "Solana", price: 95.50, change: -0.5 },
+            { symbol: "AVAX/USD", name: "Avalanche", price: 38.20, change: 4.2 }
+        ]
+        
+        function initTradingView() {
+            if (tvWidget) tvWidget.remove()
+            tvWidget = new TradingView.widget({
+                symbol: currentPair.replace("/", ""),
+                interval: "60",
+                fullscreen: false,
+                container_id: "tradingview_chart",
+                width: "100%",
+                height: "100%",
+                autosize: true,
+                toolbar_bg: "#1f2937",
+                enable_publishing: false,
+                allow_symbol_change: true,
+                theme: "dark",
+                style: "1"
+            })
+        }
+        
+        window.mobilePairChange = function() {
+            const select = document.getElementById('mobilePairSelect')
+            currentPair = select.value
+            document.getElementById('currentPairDisplay').innerHTML = currentPair
+            document.getElementById('amountLabel').innerHTML = `Amount (${currentPair.split('/')[0]})`
+            
+            const market = markets.find(m => m.symbol === currentPair)
+            if (market) currentPrice = market.price
+            
+            initTradingView()
+            updateOrderBook()
+            updateCalculations()
+            updateBalanceDisplay()
+            showToast(`Switched to ${currentPair}`)
+        }
+        
+        function updateOrderBook() {
+            const asks = [], bids = []
+            for (let i = 1; i <= 6; i++) {
+                asks.push({ price: currentPrice + (i * 5), size: (Math.random() * 2).toFixed(3), total: ((currentPrice + (i * 5)) * Math.random() * 1.5).toFixed(0) })
+                bids.push({ price: currentPrice - (i * 5), size: (Math.random() * 2).toFixed(3), total: ((currentPrice - (i * 5)) * Math.random() * 1.5).toFixed(0) })
+            }
+            const spread = ((asks[0].price - bids[0].price) / currentPrice * 100).toFixed(2)
+            const spreadElem = document.getElementById('spreadDisplay')
+            if (spreadElem) spreadElem.innerHTML = `Spread: ${spread}%`
+            document.getElementById('askOrders').innerHTML = asks.map(a => `<tr><td class="ask">$${a.price.toFixed(0)}</td><td>${a.size}</td><td>$${parseInt(a.total).toLocaleString()}</td></tr>`).join('')
+            document.getElementById('bidOrders').innerHTML = bids.map(b => `<tr><td class="bid">$${b.price.toFixed(0)}</td><td>${b.size}</td><td>$${parseInt(b.total).toLocaleString()}</td></tr>`).join('')
+        }
+        
+        window.setOrderType = function(type) {
+            currentOrderType = type
+            window.currentOrderType = type
+            document.querySelectorAll('.order-tab').forEach(tab => tab.classList.remove('active'))
+            document.querySelector(`.order-tab.${type}`).classList.add('active')
+            const btn = document.getElementById('submitBtn')
+            btn.className = `submit-btn ${type}`
+            btn.textContent = `${type.toUpperCase()} ${currentPair.split('/')[0]}`
+        }
+        
+        window.setPercentage = function(perc) {
+            const pairAsset = currentPair.split('/')[0]
+            const maxAmount = window.userBalances ? (window.userBalances[pairAsset] || 0) : 0
+            const amount = (maxAmount * perc / 100).toFixed(4)
+            document.getElementById('amount').value = amount
+            updateCalculations()
+        }
+        
+        window.updateCalculations = function() {
+            const amount = parseFloat(document.getElementById('amount').value) || 0
+            const price = parseFloat(document.getElementById('price').value) || currentPrice
+            const total = amount * price
+            const fee = total * 0.001
+            document.getElementById('totalValue').innerHTML = `$${total.toFixed(2)}`
+            document.getElementById('feeValue').innerHTML = `$${fee.toFixed(2)}`
+        }
+        
+        window.updateBalanceDisplay = function() {
+            const pairAsset = currentPair.split('/')[0]
+            const balance = window.userBalances ? (window.userBalances[pairAsset] || 0) : 0
+            const availableSpan = document.getElementById('availableBalance')
+            if (availableSpan) availableSpan.innerHTML = `${balance.toFixed(4)} ${pairAsset}`
+            
+            const usdBalance = window.userBalances ? (window.userBalances.USD || 0) : 0
+            const topBalance = document.getElementById('topBalanceDisplay')
+            if (topBalance) topBalance.innerHTML = `$${usdBalance.toFixed(2)}`
+            
+            console.log('Balance display updated - USD:', usdBalance, pairAsset + ':', balance)
+        }
+        
+        window.submitOrder = async function() {
+            const amount = parseFloat(document.getElementById('amount').value)
+            const price = parseFloat(document.getElementById('price').value)
+            const orderType = document.getElementById('orderType').value
+            
+            if (!amount || amount <= 0) { showToast('Enter valid amount'); return }
+            
+            const total = amount * price
+            const pairAsset = currentPair.split('/')[0]
+            
+            window.currentOrderType = currentOrderType
+            
+            console.log('Submitting order:', { currentOrderType: window.currentOrderType, amount, price, total, pairAsset, userBalances: window.userBalances })
+            
+            if (orderType === 'market') {
+                if (window.currentOrderType === 'buy') {
+                    if (total > (window.userBalances?.USD || 0)) {
+                        showToast(`Insufficient USD balance. Available: $${(window.userBalances?.USD || 0).toFixed(2)}`)
+                        return
+                    }
+                } else {
+                    if (amount > (window.userBalances?.[pairAsset] || 0)) {
+                        showToast(`Insufficient ${pairAsset} balance. Available: ${(window.userBalances?.[pairAsset] || 0).toFixed(4)}`)
+                        return
+                    }
+                }
+            }
+            
+            if (orderType === 'market') {
+                if (window.executeMarketOrder) {
+                    const success = await window.executeMarketOrder(amount, price, total)
+                    if (success) {
+                        showToast(`${window.currentOrderType.toUpperCase()} order executed! ${amount} ${pairAsset} at $${price}`)
+                        updateBalanceDisplay()
+                        updateCalculations()
+                        document.getElementById('amount').value = '0.01'
+                    }
+                } else {
+                    showToast(`${window.currentOrderType.toUpperCase()} order executed (Demo)! ${amount} ${pairAsset} at $${price}`)
+                }
+            } else {
+                if (window.saveLimitOrder) {
+                    await window.saveLimitOrder(amount, price)
+                } else {
+                    showToast(`${window.currentOrderType.toUpperCase()} limit order placed (Demo)`)
+                }
+                document.getElementById('amount').value = '0.01'
+                updateCalculations()
+            }
+        }
+        
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'))
+                this.classList.add('active')
+                if (tvWidget) tvWidget.setInterval(this.dataset.tf)
+            })
+        })
+        
+        window.addIndicator = function() {
+            const select = document.getElementById('indicatorSelect')
+            const indicator = select.value
+            if (indicator && tvWidget) {
+                tvWidget.chart().createStudy(indicator, false, false)
+                showToast(`Added ${indicator}`)
+            }
+            select.value = ''
+        }
+        
+        window.switchBottomTab = function(tab) {
+            document.querySelectorAll('.bottom-tab').forEach(btn => btn.classList.remove('active'))
+            event.target.classList.add('active')
+            document.getElementById('orderbookPanel').classList.remove('active')
+            document.getElementById('tradesPanel').classList.remove('active')
+            document.getElementById('ordersPanel').classList.remove('active')
+            if (tab === 'orderbook') document.getElementById('orderbookPanel').classList.add('active')
+            else if (tab === 'trades') document.getElementById('tradesPanel').classList.add('active')
+            else if (tab === 'orders') document.getElementById('ordersPanel').classList.add('active')
+        }
+        
+        function showToast(msg) {
+            const toast = document.createElement('div')
+            toast.className = 'toast'
+            toast.textContent = msg
+            document.body.appendChild(toast)
+            setTimeout(() => toast.remove(), 2500)
+        }
+        
+        function openSidebar() { document.getElementById('sidebarOverlay').classList.add('active') }
+        function closeSidebar() { document.getElementById('sidebarOverlay').classList.remove('active') }
+        
+        document.getElementById('amount').addEventListener('input', updateCalculations)
+        document.getElementById('price').addEventListener('input', updateCalculations)
+        document.getElementById('orderType').addEventListener('change', function() {
+            const priceGroup = document.getElementById('priceGroup')
+            if (priceGroup) priceGroup.style.display = this.value === 'market' ? 'none' : 'block'
+        })
+        
+        function init() {
+            initTradingView()
+            updateOrderBook()
+            updateCalculations()
+        }
+        
+        init()
+        
+        setInterval(() => {
+            if (window.userBalances) {
+                updateBalanceDisplay()
+            }
+        }, 2000)
+    </script>
+</body>
+</html>
