@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=yes" />
+    <meta name="description" content="BluepeakCapital - View and manage your trading orders. Track open orders, order history, and filled positions." />
+    <title>BluepeakCapital | Orders</title>
+    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,20 80,40 80,70 50,90 20,70 20,40' fill='%233b82f6'/%3E%3C/svg%3E" />
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
+    
+    <!-- THEME CONTROLLER - MUST BE FIRST -->
+    <script>
+        function initTheme() {
+            const savedTheme = localStorage.getItem('bluepeak_theme');
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('bluepeak_theme', 'dark');
+            }
+        }
+        initTheme();
+    </script>
+    
+    <!-- Supabase SDK -->
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+        const supabaseUrl = 'https://txcbfzcomfyavcgqcevq.supabase.co'
+        const supabaseAnonKey = 'sb_publishable_6-gQnlgqnM20wQ9iWx5lsw_ZD7Uz5bH'
+        const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+        let currentUserId = null
+
+        async function loadUserData() {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session) {
+                document.getElementById('balanceDisplay').innerHTML = '$0.00'
+                return
+            }
+            
+            currentUserId = session.user.id
+            
+            // Load user balance - FIXED: 'balances' → 'user_balances'
+            const { data } = await supabase
+                .from('user_balances')
+                .select('balance')
+                .eq('user_id', currentUserId)
+                .eq('asset', 'USD')
+                .single()
+            
+            const balance = data?.balance || 0
+            document.getElementById('balanceDisplay').innerHTML = `$${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            
+            // Load orders from Supabase
+            await loadOrdersFromSupabase()
+        }
+        
+        async function loadOrdersFromSupabase() {
+            // Load open orders (pending status)
+            const { data: openData } = await supabase
+                .from('orders')
+                .select('*')
+                .eq('user_id', currentUserId)
+                .in('status', ['pending', 'partial'])
+                .order('created_at', { ascending: false })
+            
+            if (openData && openData.length > 0) {
+                window.openOrders = openData.map(o => ({
+                    id: o.id.substring(0, 8),
+                    pair: o.pair,
+                    type: o.type,
+                    price: o.price,
+                    amount: o.amount,
+                    filled: o.filled || 0,
+                    value: o.amount * o.price,
+                    status: o.status,
+                    date: new Date(o.created_at).toLocaleString()
+                }))
+            } else {
+                window.openOrders = []
+            }
+            
+            // Load order history (filled + cancelled)
+            const { data: historyData } = await supabase
+                .from('orders')
+                .select('*')
+                .eq('user_id', currentUserId)
+                .in('status', ['filled', 'cancelled'])
+                .order('created_at', { ascending: false })
+            
+            if (historyData && historyData.length > 0) {
+                window.orderHistory = historyData.map(o => ({
+                    id: o.id.substring(0, 8),
+                    date: new Date(o.created_at).toLocaleString(),
+                    pair: o.pair,
+                    type: o.type,
+                    price: o.price,
+                    amount: o.amount,
+                    filled: o.filled || 0,
+                    status: o.status
+                }))
+            } else {
+                window.orderHistory = []
+            }
+            
+            // Load filled trades from trades table
+            const { data: tradesData } = await supabase
+                .from('trades')
+                .select('*')
+                .eq('user_id', currentUserId)
+                .order('created_at', { ascending: false })
+            
+            if (tradesData && tradesData.length > 0) {
+                window.filledOrders = tradesData.map(t => ({
+                    id: t.id.substring(0, 8),
+                    date: new Date(t.created_at).toLocaleString(),
+                    pair: t.pair,
+                    type: t.type,
+                    avgPrice: t.price,
+                    amount: t.amount,
+                    total: t.total,
+                    fee: t.fee
+                }))
+            } else {
+                window.filledOrders = []
+            }
+            
+            // Refresh UI
+            if (typeof loadOpenOrders === 'function') loadOpenOrders()
+            if (typeof loadHistoryOrders === 'function') loadHistoryOrders()
+            if (typeof loadFilledOrders === 'function') loadFilledOrders()
+            if (typeof updateSummary === 'function') updateSummary()
+        }
+        
+        loadUserData()
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Dark Mode as Default */
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1f2937;
+            --bg-input: #374151;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+            --nav-bg: #111827;
+            --hover-bg: #374151;
+            --positive: #10b981;
+            --negative: #ef4444;
+            --buy-color: #10b981;
+            --sell-color: #ef4444;
+            --status-open: #10b981;
+            --status-filled: #3b82f6;
+            --status-cancelled: #ef4444;
+        }
+
+        /* Light Mode */
+        [data-theme="light"] {
+            --bg-primary: #f5f7fb;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #f8fafc;
+            --text-primary: #1a1f36;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --nav-bg: #ffffff;
+            --hover-bg: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* Desktop Navigation */
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #3b82f6;
+        }
+
+        /* Right Menu */
+        .right-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .flag-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .balance-amount {
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+            background: var(--hover-bg);
+            padding: 0.25rem 0.7rem;
+            border-radius: 30px;
+        }
+
+        .hamburger-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            display: none;
+        }
+
+        /* Sidebar Menu */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .sidebar-menu {
+            position: fixed;
+            top: 0;
+            right: -280px;
+            width: 260px;
+            height: 100%;
+            background: var(--bg-secondary);
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+            z-index: 2001;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem 0;
+        }
+
+        .sidebar-overlay.active .sidebar-menu {
+            right: 0;
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 0.8rem 1.2rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .sidebar-menu a:hover {
+            background: var(--hover-bg);
+            color: #3b82f6;
+        }
+
+        /* Trust Bar */
+        .trust-bar {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.4rem 1rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            overflow-x: auto;
+        }
+
+        .trust-separator {
+            width: 1px;
+            height: 10px;
+            background: var(--border-color);
+        }
+
+        /* Main Container */
+        .orders-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .cancel-all-btn {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.35rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .cancel-all-btn:hover {
+            background: var(--negative);
+            color: white;
+            border-color: var(--negative);
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .summary-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.7rem;
+        }
+
+        .summary-label {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.3rem;
+        }
+
+        .summary-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Tabs */
+        .orders-tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: #3b82f6;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #3b82f6;
+        }
+
+        /* Filters Bar */
+        .filters-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.35rem 0.6rem;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 0.7rem;
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .search-input {
+            padding: 0.35rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.7rem;
+            width: 160px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        .orders-table th {
+            text-align: left;
+            padding: 0.5rem 0.6rem;
+            background: var(--hover-bg);
+            color: var(--text-secondary);
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .orders-table td {
+            padding: 0.4rem 0.6rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.7rem;
+            color: var(--text-primary);
+        }
+
+        .cancel-btn {
+            background: var(--negative);
+            color: white;
+            border: none;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            cursor: pointer;
+        }
+
+        .cancel-btn:hover {
+            background: #dc2626;
+        }
+
+        .status-open { color: #10b981; font-weight: 500; }
+        .status-filled { color: #3b82f6; font-weight: 500; }
+        .status-cancelled { color: #ef4444; font-weight: 500; }
+        .buy-type { color: #10b981; }
+        .sell-type { color: #ef4444; }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 0.3rem 0.6rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            color: var(--text-primary);
+        }
+
+        .page-btn:hover {
+            background: var(--hover-bg);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .hamburger-btn {
+                display: block;
+            }
+            .orders-container {
+                padding: 0.8rem;
+            }
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.6rem;
+            }
+            .summary-card {
+                padding: 0.5rem;
+            }
+            .summary-value {
+                font-size: 0.9rem;
+            }
+            .trust-bar {
+                display: none;
+            }
+            .filters-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-input {
+                width: 100%;
+            }
+            .filter-group {
+                justify-content: space-between;
+            }
+            .filter-select {
+                flex: 1;
+            }
+            .orders-table {
+                min-width: 550px;
+            }
+            .orders-table th {
+                padding: 0.35rem 0.4rem;
+                font-size: 0.55rem;
+            }
+            .orders-table td {
+                padding: 0.35rem 0.4rem;
+                font-size: 0.65rem;
+            }
+            .tab-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.75rem;
+            }
+            .page-header h1 {
+                font-size: 1.1rem;
+            }
+            .flag-icon {
+                width: 22px;
+                height: 22px;
+            }
+            .balance-amount {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.6rem;
+            }
+            .right-menu {
+                gap: 0.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo" onclick="location.href='index.html'">
+            <div class="logo-icon">⛰️</div>
+            <div class="logo-text">BluepeakCapital</div>
+        </div>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="trade.html">Trade</a>
+            <a href="markets.html">Markets</a>
+            <a href="#" class="active">Orders</a>
+            <a href="bots.html">Bots</a>
+            <a href="deposit.html">Deposit</a>
+            <a href="withdraw.html">Withdraw</a>
+            <a href="settings.html">Settings</a>
+            <a href="support.html">Support</a>
+        </div>
+        <div class="right-menu">
+            <img src="https://flagcdn.com/w320/us.png" alt="USD" class="flag-icon" onclick="alert('Currency: USD')">
+            <div class="balance-amount" id="balanceDisplay">$0.00</div>
+            <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+        </div>
+    </nav>
+
+    <!-- Sidebar Menu -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()">
+        <div class="sidebar-menu" onclick="event.stopPropagation()">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">⛰️</div>
+                    <div class="logo-text">BluepeakCapital</div>
+                </div>
+            </div>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="trade.html">Trade</a>
+            <a href="markets.html">Markets</a>
+            <a href="orders.html">Orders</a>
+            <a href="bots.html">Bots</a>
+            <a href="deposit.html">Deposit</a>
+            <a href="withdraw.html">Withdraw</a>
+            <a href="settings.html">Settings</a>
+            <a href="support.html">Support</a>
+        </div>
+    </div>
+
+    <!-- Trust Bar -->
+    <div class="trust-bar">
+        <span>FINRA Member</span>
+        <span class="trust-separator"></span>
+        <span>SIPC Insured</span>
+        <span class="trust-separator"></span>
+        <span>Cold Storage</span>
+        <span class="trust-separator"></span>
+        <span>$500M Insurance</span>
+    </div>
+
+    <div class="orders-container">
+        <div class="page-header">
+            <h1>Orders</h1>
+            <button class="cancel-all-btn" onclick="cancelAllOrders()">Cancel All</button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-label">Open Orders</div>
+                <div class="summary-value" id="openOrdersCount">0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Today's Volume</div>
+                <div class="summary-value" id="todayVolume">$0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Total Filled</div>
+                <div class="summary-value" id="totalFilled">0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Total Cancelled</div>
+                <div class="summary-value" id="totalCancelled">0</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="orders-tabs">
+            <button class="tab-btn active" onclick="switchTab('open')">Open</button>
+            <button class="tab-btn" onclick="switchTab('history')">History</button>
+            <button class="tab-btn" onclick="switchTab('filled')">Filled</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+            <div class="filter-group">
+                <select class="filter-select" id="pairFilter" onchange="applyFilters()">
+                    <option value="all">All Pairs</option>
+                    <option value="BTC/USD">BTC/USD</option>
+                    <option value="ETH/USD">ETH/USD</option>
+                    <option value="SOL/USD">SOL/USD</option>
+                    <option value="AVAX/USD">AVAX/USD</option>
+                </select>
+                <select class="filter-select" id="typeFilter" onchange="applyFilters()">
+                    <option value="all">All Types</option>
+                    <option value="buy">Buy</option>
+                    <option value="sell">Sell</option>
+                </select>
+            </div>
+            <input type="text" class="search-input" id="searchInput" placeholder="Search" onkeyup="applyFilters()">
+        </div>
+
+        <!-- Open Orders Tab -->
+        <div id="openTab" class="tab-content">
+            <div class="table-container">
+                <table class="orders-table">
+                    <thead>
+                        <tr><th>ID</th><th>Pair</th><th>Type</th><th>Price</th><th>Amount</th><th>Filled</th><th>Value</th><th>Status</th><th></th></tr>
+                    </thead>
+                    <tbody id="openOrdersBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Order History Tab -->
+        <div id="historyTab" class="tab-content" style="display: none;">
+            <div class="table-container">
+                <table class="orders-table">
+                    <thead><tr><th>ID</th><th>Date</th><th>Pair</th><th>Type</th><th>Price</th><th>Amount</th><th>Filled</th><th>Status</th></tr></thead>
+                    <tbody id="historyOrdersBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Filled Orders Tab -->
+        <div id="filledTab" class="tab-content" style="display: none;">
+            <div class="table-container">
+                <table class="orders-table">
+                    <thead><tr><th>ID</th><th>Date</th><th>Pair</th><th>Type</th><th>Avg Price</th><th>Amount</th><th>Total</th><th>Fee</th></tr></thead>
+                    <tbody id="filledOrdersBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <button class="page-btn" onclick="prevPage()">◀</button>
+                <span id="pageInfo" style="font-size: 0.7rem;">Page 1</span>
+                <button class="page-btn" onclick="nextPage()">▶</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let openOrders = []
+        let orderHistory = []
+        let filledOrders = []
+        
+        let currentTab = "open"
+        let currentPage = 1
+
+        function loadOpenOrders() {
+            const tbody = document.getElementById('openOrdersBody')
+            const pairFilter = document.getElementById('pairFilter').value
+            const typeFilter = document.getElementById('typeFilter').value
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase()
+            
+            let filtered = openOrders.filter(order => {
+                if (pairFilter !== 'all' && order.pair !== pairFilter) return false
+                if (typeFilter !== 'all' && order.type !== typeFilter) return false
+                if (searchTerm && !order.id.toLowerCase().includes(searchTerm) && !order.pair.toLowerCase().includes(searchTerm)) return false
+                return true
+            })
+            
+            document.getElementById('openOrdersCount').innerHTML = filtered.length
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem;">No open orders</div></div> </div>'
+                return
+            }
+            
+            tbody.innerHTML = filtered.map(order => `
+                <tr>
+                    <td>${order.id}</div>
+                    <td>${order.pair}</div>
+                    <td class="${order.type === 'buy' ? 'buy-type' : 'sell-type'}">${order.type.toUpperCase()}</div>
+                    <td>$${order.price.toLocaleString()}</div>
+                    <td>${order.amount} ${order.pair.split('/')[0]}</div>
+                    <td>${order.filled}%</div>
+                    <td>$${order.value.toLocaleString()}</div>
+                    <td class="status-open">${order.status === 'partial' ? 'Partial' : 'Open'}</div>
+                    <td><button class="cancel-btn" onclick="cancelOrder('${order.id}')">Cancel</button></div>
+                </tr>
+            `).join('')
+        }
+
+        function loadHistoryOrders() {
+            const tbody = document.getElementById('historyOrdersBody')
+            const pairFilter = document.getElementById('pairFilter').value
+            const typeFilter = document.getElementById('typeFilter').value
+            
+            let filtered = orderHistory.filter(order => {
+                if (pairFilter !== 'all' && order.pair !== pairFilter) return false
+                if (typeFilter !== 'all' && order.type !== typeFilter) return false
+                return true
+            })
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem;">No order history</div></div> </div>'
+                return
+            }
+            
+            tbody.innerHTML = filtered.map(order => `
+                <tr>
+                    <td>${order.id}</div>
+                    <td>${order.date}</div>
+                    <td>${order.pair}</div>
+                    <td class="${order.type === 'buy' ? 'buy-type' : 'sell-type'}">${order.type.toUpperCase()}</div>
+                    <td>$${order.price.toLocaleString()}</div>
+                    <td>${order.amount} ${order.pair.split('/')[0]}</div>
+                    <td>${order.filled}%</div>
+                    <td class="${order.status === 'filled' ? 'status-filled' : 'status-cancelled'}">${order.status.toUpperCase()}</div>
+                </tr>
+            `).join('')
+        }
+
+        function loadFilledOrders() {
+            const tbody = document.getElementById('filledOrdersBody')
+            
+            if (filledOrders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem;">No filled orders</div></div> </div>'
+                return
+            }
+            
+            tbody.innerHTML = filledOrders.map(order => `
+                <tr>
+                    <td>${order.id}</div>
+                    <td>${order.date}</div>
+                    <td>${order.pair}</div>
+                    <td class="${order.type === 'buy' ? 'buy-type' : 'sell-type'}">${order.type.toUpperCase()}</div>
+                    <td>$${order.avgPrice.toLocaleString()}</div>
+                    <td>${order.amount} ${order.pair.split('/')[0]}</div>
+                    <td>$${order.total.toLocaleString()}</div>
+                    <td>$${order.fee.toFixed(2)}</div>
+                </tr>
+            `).join('')
+        }
+
+        function cancelOrder(orderId) {
+            if (confirm(`Cancel order ${orderId}?`)) {
+                const orderIndex = openOrders.findIndex(o => o.id === orderId)
+                if (orderIndex !== -1) {
+                    const cancelledOrder = openOrders[orderIndex]
+                    openOrders.splice(orderIndex, 1)
+                    orderHistory.unshift({ ...cancelledOrder, status: "cancelled", date: new Date().toLocaleString() })
+                    loadOpenOrders()
+                    loadHistoryOrders()
+                    updateSummary()
+                    showToast(`Order ${orderId} cancelled`)
+                }
+            }
+        }
+
+        function cancelAllOrders() {
+            if (openOrders.length === 0) { showToast('No open orders'); return }
+            if (confirm(`Cancel all ${openOrders.length} open orders?`)) {
+                openOrders.forEach(order => {
+                    orderHistory.unshift({ ...order, status: "cancelled", date: new Date().toLocaleString() })
+                })
+                openOrders = []
+                loadOpenOrders()
+                loadHistoryOrders()
+                updateSummary()
+                showToast('All orders cancelled')
+            }
+        }
+
+        function applyFilters() {
+            if (currentTab === 'open') loadOpenOrders()
+            else if (currentTab === 'history') loadHistoryOrders()
+        }
+
+        function switchTab(tab) {
+            currentTab = tab
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none')
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
+            if (tab === 'open') {
+                document.getElementById('openTab').style.display = 'block'
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active')
+                loadOpenOrders()
+            } else if (tab === 'history') {
+                document.getElementById('historyTab').style.display = 'block'
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active')
+                loadHistoryOrders()
+            } else if (tab === 'filled') {
+                document.getElementById('filledTab').style.display = 'block'
+                document.querySelector('.tab-btn:nth-child(3)').classList.add('active')
+                loadFilledOrders()
+            }
+        }
+
+        function updateSummary() {
+            document.getElementById('openOrdersCount').innerHTML = openOrders.length
+            document.getElementById('totalFilled').innerHTML = filledOrders.length
+            document.getElementById('totalCancelled').innerHTML = orderHistory.filter(o => o.status === 'cancelled').length
+            document.getElementById('todayVolume').innerHTML = `$${filledOrders.reduce((sum, o) => sum + o.total, 0).toLocaleString()}`
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div')
+            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.7rem; z-index: 1000;'
+            toast.textContent = msg
+            document.body.appendChild(toast)
+            setTimeout(() => toast.remove(), 2000)
+        }
+
+        function prevPage() { if (currentPage > 1) { currentPage--; document.getElementById('pageInfo').innerHTML = `Page ${currentPage}`; loadFilledOrders() } }
+        function nextPage() { currentPage++; document.getElementById('pageInfo').innerHTML = `Page ${currentPage}`; loadFilledOrders() }
+        function openSidebar() { document.getElementById('sidebarOverlay').classList.add('active') }
+        function closeSidebar() { document.getElementById('sidebarOverlay').classList.remove('active') }
+
+        loadOpenOrders()
+        loadHistoryOrders()
+        loadFilledOrders()
+        updateSummary()
+    </script>
+</body>
+</html>
