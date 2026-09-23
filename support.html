@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=yes" />
+    <meta name="description" content="BluepeakCapital - 24/7 institutional support. Get help with trading, deposits, withdrawals, and account management." />
+    <title>BluepeakCapital | Support Center</title>
+    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,20 80,40 80,70 50,90 20,70 20,40' fill='%233b82f6'/%3E%3C/svg%3E" />
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
+    
+    <!-- THEME CONTROLLER - MUST BE FIRST -->
+    <script>
+        function initTheme() {
+            const savedTheme = localStorage.getItem('bluepeak_theme');
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('bluepeak_theme', 'dark');
+            }
+        }
+        initTheme();
+    </script>
+    
+    <!-- Supabase SDK -->
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+        const supabaseUrl = 'https://txcbfzcomfyavcgqcevq.supabase.co'
+        const supabaseAnonKey = 'sb_publishable_6-gQnlgqnM20wQ9iWx5lsw_ZD7Uz5bH'
+        const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session) {
+                window.location.href = 'login.html'
+            }
+        }
+        
+        checkAuth()
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Dark Mode as Default */
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1f2937;
+            --bg-input: #374151;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+            --nav-bg: #111827;
+            --hover-bg: #374151;
+            --btn-primary: #3b82f6;
+            --btn-primary-hover: #2563eb;
+            --positive: #10b981;
+            --negative: #ef4444;
+        }
+
+        /* Light Mode */
+        [data-theme="light"] {
+            --bg-primary: #f5f7fb;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #f8fafc;
+            --text-primary: #1a1f36;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --nav-bg: #ffffff;
+            --hover-bg: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* Desktop Navigation */
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #3b82f6;
+        }
+
+        /* Right Menu */
+        .right-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .flag-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .hamburger-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            display: none;
+        }
+
+        /* Sidebar Menu */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .sidebar-menu {
+            position: fixed;
+            top: 0;
+            right: -280px;
+            width: 260px;
+            height: 100%;
+            background: var(--bg-secondary);
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+            z-index: 2001;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem 0;
+        }
+
+        .sidebar-overlay.active .sidebar-menu {
+            right: 0;
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 0.8rem 1.2rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .sidebar-menu a:hover {
+            background: var(--hover-bg);
+            color: #3b82f6;
+        }
+
+        /* Trust Bar */
+        .trust-bar {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.4rem 1rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            overflow-x: auto;
+        }
+
+        .trust-separator {
+            width: 1px;
+            height: 10px;
+            background: var(--border-color);
+        }
+
+        /* Main Container */
+        .support-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Hero Section */
+        .support-hero {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .support-hero h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            color: var(--text-primary);
+        }
+
+        .support-hero p {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-box {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            font-size: 0.8rem;
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .quick-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-card:hover {
+            transform: translateY(-2px);
+            border-color: #3b82f6;
+        }
+
+        .quick-icon {
+            font-size: 1.3rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .quick-title {
+            font-weight: 600;
+            font-size: 0.7rem;
+            margin-bottom: 0.2rem;
+            color: var(--text-primary);
+        }
+
+        .quick-desc {
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+        }
+
+        /* Two Column Layout */
+        .support-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* FAQ Section */
+        .faq-section, .contact-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        /* FAQ Accordion */
+        .faq-item {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.7rem 0;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+        }
+
+        .faq-question span {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            line-height: 1.4;
+        }
+
+        .faq-answer.active {
+            max-height: 200px;
+            padding-bottom: 0.7rem;
+        }
+
+        /* Contact Form */
+        .contact-form .form-group {
+            margin-bottom: 0.8rem;
+        }
+
+        .contact-form label {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.2rem;
+        }
+
+        .contact-form input, .contact-form select, .contact-form textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .contact-form input::placeholder, .contact-form textarea::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .contact-form textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn-primary {
+            background: var(--btn-primary);
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--btn-primary-hover);
+        }
+
+        /* Knowledge Base */
+        .kb-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .kb-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+        }
+
+        .kb-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .kb-card:hover {
+            border-color: #3b82f6;
+        }
+
+        .kb-category {
+            font-size: 0.6rem;
+            color: #3b82f6;
+            margin-bottom: 0.3rem;
+        }
+
+        .kb-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .kb-desc {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+        }
+
+        /* System Status */
+        .status-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .status-name {
+            font-size: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .status-badge {
+            font-size: 0.6rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 16px;
+        }
+
+        .status-operational {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .hamburger-btn {
+                display: block;
+            }
+            .support-container {
+                padding: 0.8rem;
+            }
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.6rem;
+            }
+            .support-grid {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+            .kb-grid {
+                grid-template-columns: 1fr;
+                gap: 0.6rem;
+            }
+            .trust-bar {
+                display: none;
+            }
+            .support-hero h1 {
+                font-size: 1.3rem;
+            }
+            .faq-question {
+                font-size: 0.75rem;
+            }
+            .flag-icon {
+                width: 24px;
+                height: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo" onclick="location.href='index.html'">
+            <div class="logo-icon">⛰️</div>
+            <div class="logo-text">BluepeakCapital</div>
+        </div>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="trade.html">Trade</a>
+            <a href="markets.html">Markets</a>
+            <a href="orders.html">Orders</a>
+            <a href="bots.html">Bots</a>
+            <a href="deposit.html">Deposit</a>
+            <a href="withdraw.html">Withdraw</a>
+            <a href="settings.html">Settings</a>
+            <a href="#" class="active">Support</a>
+        </div>
+        <div class="right-menu">
+            <img src="https://flagcdn.com/w320/us.png" alt="USD" class="flag-icon" onclick="showToast('Currency: USD')">
+            <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+        </div>
+    </nav>
+
+    <!-- Sidebar Menu -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()">
+        <div class="sidebar-menu" onclick="event.stopPropagation()">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">⛰️</div>
+                    <div class="logo-text">BluepeakCapital</div>
+                </div>
+            </div>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="trade.html">Trade</a>
+            <a href="markets.html">Markets</a>
+            <a href="orders.html">Orders</a>
+            <a href="bots.html">Bots</a>
+            <a href="deposit.html">Deposit</a>
+            <a href="withdraw.html">Withdraw</a>
+            <a href="settings.html">Settings</a>
+            <a href="support.html">Support</a>
+        </div>
+    </div>
+
+    <!-- Trust Bar -->
+    <div class="trust-bar">
+        <span>FINRA Member</span>
+        <span class="trust-separator"></span>
+        <span>SIPC Insured</span>
+        <span class="trust-separator"></span>
+        <span>Cold Storage</span>
+        <span class="trust-separator"></span>
+        <span>$500M Insurance</span>
+        <span class="trust-separator"></span>
+        <span>24/7 Support</span>
+    </div>
+
+    <div class="support-container">
+        <!-- Hero Section -->
+        <div class="support-hero">
+            <h1>How can we help?</h1>
+            <p>Get instant answers from our support team</p>
+            <div class="search-box">
+                <input type="text" placeholder="Search..." id="searchInput" onkeyup="searchFAQ()">
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <div class="quick-card" onclick="scrollToContact()">
+                <div class="quick-icon">💬</div>
+                <div class="quick-title">Live Chat</div>
+                <div class="quick-desc">24/7 support</div>
+            </div>
+            <div class="quick-card" onclick="showToast('Ticket system')">
+                <div class="quick-icon">🎫</div>
+                <div class="quick-title">Submit Ticket</div>
+                <div class="quick-desc">Email support</div>
+            </div>
+            <div class="quick-card" onclick="showToast('Callback')">
+                <div class="quick-icon">📞</div>
+                <div class="quick-title">Callback</div>
+                <div class="quick-desc">We'll call you</div>
+            </div>
+            <div class="quick-card" onclick="showToast('Guides')">
+                <div class="quick-icon">📚</div>
+                <div class="quick-title">Guides</div>
+                <div class="quick-desc">Step-by-step</div>
+            </div>
+        </div>
+
+        <!-- FAQ + Contact -->
+        <div class="support-grid">
+            <!-- FAQ Section -->
+            <div class="faq-section">
+                <div class="section-title">FAQ</div>
+                
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        How do I deposit funds?
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Navigate to Deposit. Select your cryptocurrency, copy the address, and send funds. Deposits confirm within 10-30 minutes.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        What are withdrawal fees?
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Fees vary by asset. BTC: 0.0005, ETH: 0.005, USDT: $5, SOL: 0.01. Minimum amounts apply.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        How to enable 2FA?
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Go to Settings → Security → Enable 2FA. Scan QR code with Google Authenticator or Authy.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        Minimum deposit?
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        BTC: 0.001, ETH: 0.01, USDT: $50, SOL: 0.1. Below these may not be credited.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        Withdrawal time?
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Processed within 24 hours after security review, plus network confirmations (10-60 min).
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="contact-section" id="contactSection">
+                <div class="section-title">Contact Support</div>
+                <form class="contact-form" id="supportForm">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="contactName" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="contactEmail" placeholder="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <select id="contactSubject">
+                            <option>General Inquiry</option>
+                            <option>Technical Support</option>
+                            <option>Deposit Issue</option>
+                            <option>Withdrawal Issue</option>
+                            <option>Account Security</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea id="contactMessage" placeholder="Describe your issue..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Knowledge Base -->
+        <div class="kb-section">
+            <div class="section-title">Knowledge Base</div>
+            <div class="kb-grid">
+                <div class="kb-card" onclick="showToast('Getting Started')">
+                    <div class="kb-category">Getting Started</div>
+                    <div class="kb-title">Account Setup & KYC</div>
+                    <div class="kb-desc">Step-by-step guide</div>
+                </div>
+                <div class="kb-card" onclick="showToast('Trading Guide')">
+                    <div class="kb-category">Trading</div>
+                    <div class="kb-title">Order Types</div>
+                    <div class="kb-desc">Market, Limit, Stop Loss</div>
+                </div>
+                <div class="kb-card" onclick="showToast('Security Guide')">
+                    <div class="kb-category">Security</div>
+                    <div class="kb-title">Best Practices</div>
+                    <div class="kb-desc">Keep assets safe</div>
+                </div>
+                <div class="kb-card" onclick="showToast('API Guide')">
+                    <div class="kb-category">API</div>
+                    <div class="kb-title">REST API Docs</div>
+                    <div class="kb-desc">Connect your bots</div>
+                </div>
+                <div class="kb-card" onclick="showToast('Fees Guide')">
+                    <div class="kb-category">Fees</div>
+                    <div class="kb-title">Fee Structure</div>
+                    <div class="kb-desc">Maker/taker tiers</div>
+                </div>
+                <div class="kb-card" onclick="showToast('Tax Guide')">
+                    <div class="kb-category">Tax</div>
+                    <div class="kb-title">Tax Reporting</div>
+                    <div class="kb-desc">Generate reports</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="status-section">
+            <div class="section-title">System Status</div>
+            <div class="status-item">
+                <span class="status-name">Trading Engine</span>
+                <span class="status-badge status-operational">Operational</span>
+            </div>
+            <div class="status-item">
+                <span class="status-name">Deposits & Withdrawals</span>
+                <span class="status-badge status-operational">Operational</span>
+            </div>
+            <div class="status-item">
+                <span class="status-name">WebSocket Feeds</span>
+                <span class="status-badge status-operational">Operational</span>
+            </div>
+            <div class="status-item">
+                <span class="status-name">REST API</span>
+                <span class="status-badge status-operational">Operational</span>
+            </div>
+            <div class="status-item">
+                <span class="status-name">Customer Support</span>
+                <span class="status-badge status-operational">24/7 Available</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleFAQ(element) {
+            const answer = element.nextElementSibling;
+            const arrow = element.querySelector('span');
+            answer.classList.toggle('active');
+            arrow.innerHTML = answer.classList.contains('active') ? '▲' : '▼';
+        }
+
+        function searchFAQ() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.faq-item').forEach(item => {
+                const question = item.querySelector('.faq-question').textContent.toLowerCase();
+                const answer = item.querySelector('.faq-answer').textContent.toLowerCase();
+                item.style.display = (question.includes(searchTerm) || answer.includes(searchTerm) || searchTerm === '') ? 'block' : 'none';
+            });
+        }
+
+        function scrollToContact() {
+            document.getElementById('contactSection').scrollIntoView({ behavior: 'smooth' });
+            showToast('Live chat will open');
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.7rem; z-index: 1000;';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+        document.getElementById('supportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('contactName').value;
+            const email = document.getElementById('contactEmail').value;
+            const message = document.getElementById('contactMessage').value;
+            
+            if (name && email && message) {
+                showToast('Ticket submitted! Response within 24 hours');
+                document.getElementById('contactMessage').value = '';
+            } else {
+                showToast('Please fill in all required fields');
+            }
+        });
+
+        function openSidebar() { document.getElementById('sidebarOverlay').classList.add('active'); }
+        function closeSidebar() { document.getElementById('sidebarOverlay').classList.remove('active'); }
+    </script>
+</body>
+</html>
