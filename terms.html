@@ -6,20 +6,52 @@
     <meta name="description" content="BluepeakCapital - Terms of Service. Legal terms and conditions for using our institutional trading platform." />
     <title>BluepeakCapital | Terms of Service</title>
     <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,20 80,40 80,70 50,90 20,70 20,40' fill='%233b82f6'/%3E%3C/svg%3E" />
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
-    
+
+    <script>
+        (function initTheme() {
+            const savedTheme = localStorage.getItem('bluepeak_theme');
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('bluepeak_theme', 'dark');
+            }
+        })();
+    </script>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1f2937;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+            --nav-bg: #111827;
+            --hover-bg: #374151;
+            --accent: #3b82f6;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f5f7fb;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: #1a1f36;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --nav-bg: #ffffff;
+            --hover-bg: #f1f5f9;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f5f7fb;
-            color: #1a1f36;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         nav {
@@ -27,8 +59,8 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.8rem 2rem;
-            background: white;
-            border-bottom: 1px solid #e2e8f0;
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -36,52 +68,112 @@
             gap: 1rem;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-        }
-
+        .logo { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
         .logo-icon {
-            width: 32px;
-            height: 32px;
+            width: 32px; height: 32px;
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: white;
         }
-
         .logo-text {
-            font-size: 1.2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #1a1f36, #3b82f6);
-            -webkit-background-clip: text;
-            background-clip: text;
+            font-size: 1.2rem; font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            -webkit-background-clip: text; background-clip: text;
             color: transparent;
         }
 
-        .nav-links {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
         .nav-links a {
-            color: #4a5568;
+            color: var(--text-secondary);
             text-decoration: none;
             font-size: 0.85rem;
             font-weight: 500;
             transition: color 0.2s;
         }
+        .nav-links a:hover, .nav-links a.active { color: var(--accent); }
 
-        .nav-links a:hover {
-            color: #3b82f6;
+        .right-menu { display: flex; align-items: center; gap: 0.6rem; }
+
+        .theme-toggle {
+            background: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem;
         }
+
+        .hamburger-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            display: none;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .sidebar-overlay.active { visibility: visible; opacity: 1; }
+
+        .sidebar-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            background: var(--bg-secondary);
+            box-shadow: -2px 0 8px rgba(0,0,0,0.3);
+            z-index: 2001;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-overlay.active .sidebar-menu { right: 0; }
+
+        .sidebar-header {
+            padding: 1.2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .close-sidebar {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5rem 0;
+            overflow-y: auto;
+        }
+        .sidebar-nav a {
+            display: block;
+            padding: 0.8rem 1.2rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .sidebar-nav a:hover { background: var(--hover-bg); color: var(--accent); }
 
         .legal-container {
             max-width: 900px;
@@ -89,70 +181,61 @@
             padding: 2rem;
         }
 
-        .legal-header {
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
+        .legal-header { margin-bottom: 2rem; text-align: center; }
         .legal-header h1 {
             font-size: 2rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
+            color: var(--text-primary);
         }
-
         .legal-header p {
-            color: #64748b;
+            color: var(--text-secondary);
             font-size: 0.85rem;
         }
 
         .legal-content {
-            background: white;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 2rem;
         }
 
-        .legal-section {
-            margin-bottom: 2rem;
-        }
-
+        .legal-section { margin-bottom: 2rem; }
         .legal-section h2 {
             font-size: 1.25rem;
             font-weight: 600;
             margin-bottom: 1rem;
-            color: #1a1f36;
+            color: var(--text-primary);
         }
-
         .legal-section h3 {
             font-size: 1rem;
             font-weight: 600;
             margin: 1rem 0 0.5rem;
-            color: #1a1f36;
+            color: var(--text-primary);
         }
-
         .legal-section p {
             font-size: 0.85rem;
             line-height: 1.6;
-            color: #4a5568;
+            color: var(--text-secondary);
             margin-bottom: 0.75rem;
         }
-
-        .legal-section ul {
-            margin: 0.75rem 0 0.75rem 1.5rem;
-        }
-
+        .legal-section ul { margin: 0.75rem 0 0.75rem 1.5rem; }
         .legal-section li {
             font-size: 0.85rem;
-            color: #4a5568;
+            color: var(--text-secondary);
             margin-bottom: 0.5rem;
+            line-height: 1.5;
         }
+        .legal-section strong { color: var(--text-primary); }
+        .legal-section a { color: var(--accent); text-decoration: none; }
+        .legal-section a:hover { text-decoration: underline; }
 
         .last-updated {
             margin-top: 2rem;
             padding-top: 1rem;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid var(--border-color);
             font-size: 0.7rem;
-            color: #94a3b8;
+            color: var(--text-secondary);
             text-align: center;
         }
 
@@ -162,12 +245,10 @@
             text-align: center;
             margin-top: 2rem;
         }
-
         footer p {
             color: #94a3b8;
             font-size: 0.7rem;
         }
-
         .footer-links {
             display: flex;
             justify-content: center;
@@ -175,27 +256,21 @@
             margin-bottom: 1rem;
             flex-wrap: wrap;
         }
-
         .footer-links a {
             color: #94a3b8;
             text-decoration: none;
             font-size: 0.7rem;
         }
-
-        .footer-links a:hover {
-            color: #60a5fa;
-        }
+        .footer-links a:hover { color: #60a5fa; }
 
         @media (max-width: 768px) {
-            .legal-container {
-                padding: 1rem;
-            }
-            .legal-content {
-                padding: 1rem;
-            }
-            .nav-links {
-                display: none;
-            }
+            nav { padding: 0.8rem 1rem; }
+            .nav-links { display: none; }
+            .hamburger-btn { display: block; }
+            .legal-container { padding: 1rem; }
+            .legal-content { padding: 1.25rem; }
+            .legal-header h1 { font-size: 1.5rem; }
+            .legal-section h2 { font-size: 1.1rem; }
         }
     </style>
 </head>
@@ -216,7 +291,37 @@
             <a href="settings.html">Settings</a>
             <a href="support.html">Support</a>
         </div>
+        <div class="right-menu">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
+            <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+        </div>
     </nav>
+
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()">
+        <div class="sidebar-menu" onclick="event.stopPropagation()">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">⛰️</div>
+                    <div class="logo-text">BluepeakCapital</div>
+                </div>
+                <button class="close-sidebar" onclick="closeSidebar()">✕</button>
+            </div>
+            <div class="sidebar-nav">
+                <a href="index.html">Home</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="trade.html">Trade</a>
+                <a href="markets.html">Markets</a>
+                <a href="orders.html">Orders</a>
+                <a href="bots.html">Bots</a>
+                <a href="deposit.html">Deposit</a>
+                <a href="withdraw.html">Withdraw</a>
+                <a href="settings.html">Settings</a>
+                <a href="support.html">Support</a>
+                <a href="terms.html">Terms of Service</a>
+                <a href="privacy.html">Privacy Policy</a>
+            </div>
+        </div>
+    </div>
 
     <div class="legal-container">
         <div class="legal-header">
@@ -323,5 +428,26 @@
         <p>BluepeakCapital is a registered FINRA Member and SIPC Insured institution.</p>
         <p style="margin-top: 0.5rem;">Cryptocurrency trading involves substantial risk of loss and is not suitable for all investors.</p>
     </footer>
+
+    <script>
+        window.toggleTheme = function () {
+            const cur = document.documentElement.getAttribute('data-theme');
+            const next = cur === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('bluepeak_theme', next);
+            updateThemeBtn();
+        };
+
+        function updateThemeBtn() {
+            const btn = document.getElementById('themeToggleBtn');
+            if (!btn) return;
+            btn.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙';
+        }
+
+        window.openSidebar = () => document.getElementById('sidebarOverlay').classList.add('active');
+        window.closeSidebar = () => document.getElementById('sidebarOverlay').classList.remove('active');
+
+        updateThemeBtn();
+    </script>
 </body>
 </html>
