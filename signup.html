@@ -6,15 +6,11 @@
     <meta name="description" content="BluepeakCapital - Create your institutional trading account" />
     <title>BluepeakCapital | Create Account</title>
     <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,20 80,40 80,70 50,90 20,70 20,40' fill='%233b82f6'/%3E%3C/svg%3E" />
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
-    
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
             --bg-primary: #0a0e17;
@@ -53,47 +49,29 @@
             border: 1px solid var(--border-color);
         }
 
-        .logo {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-
+        .logo { text-align: center; margin-bottom: 1.5rem; }
         .logo-icon {
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             border-radius: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: white;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.5rem; color: white;
             margin-bottom: 1rem;
         }
-
         .logo-text {
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1.5rem; font-weight: 700;
             letter-spacing: -0.02em;
             background: linear-gradient(135deg, #f3f4f6, #3b82f6);
-            -webkit-background-clip: text;
-            background-clip: text;
+            -webkit-background-clip: text; background-clip: text;
             color: transparent;
         }
-
-        .logo-text span {
-            color: #3b82f6;
-        }
+        .logo-text span { color: #3b82f6; }
 
         h1 {
-            font-size: 1.75rem;
-            font-weight: 600;
+            font-size: 1.75rem; font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 0.5rem;
-            text-align: center;
+            margin-bottom: 0.5rem; text-align: center;
         }
-
         .subtitle {
             text-align: center;
             color: var(--text-secondary);
@@ -107,11 +85,7 @@
             gap: 1rem;
             margin-bottom: 1rem;
         }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
+        .form-group { margin-bottom: 1.25rem; }
         label {
             display: block;
             font-size: 0.875rem;
@@ -119,10 +93,7 @@
             color: var(--text-secondary);
             margin-bottom: 0.5rem;
         }
-
-        .password-wrapper {
-            position: relative;
-        }
+        .password-wrapper { position: relative; }
 
         input {
             width: 100%;
@@ -135,16 +106,12 @@
             background: var(--bg-input);
             color: var(--text-primary);
         }
-
         input:focus {
             outline: none;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
         }
-
-        input::placeholder {
-            color: var(--text-secondary);
-        }
+        input::placeholder { color: var(--text-secondary); }
 
         .password-toggle {
             position: absolute;
@@ -162,24 +129,23 @@
         }
 
         .error-message {
-            background: rgba(239, 68, 68, 0.15);
+            background: rgba(239,68,68,0.15);
             color: #ef4444;
             padding: 0.75rem;
             border-radius: 10px;
             font-size: 0.8rem;
             margin-bottom: 1rem;
-            border: 1px solid rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239,68,68,0.2);
             display: none;
         }
-
         .success-message {
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(16,185,129,0.15);
             color: #10b981;
             padding: 0.75rem;
             border-radius: 10px;
             font-size: 0.8rem;
             margin-bottom: 1rem;
-            border: 1px solid rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16,185,129,0.2);
             display: none;
         }
 
@@ -196,17 +162,8 @@
             transition: all 0.2s;
             margin-top: 0.5rem;
         }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         .login-link {
             text-align: center;
@@ -214,25 +171,16 @@
             font-size: 0.875rem;
             color: var(--text-secondary);
         }
-
         .login-link a {
             color: #3b82f6;
             text-decoration: none;
             font-weight: 500;
         }
-
-        .login-link a:hover {
-            text-decoration: underline;
-        }
+        .login-link a:hover { text-decoration: underline; }
 
         @media (max-width: 768px) {
-            .signup-card {
-                padding: 1.5rem;
-            }
-            .form-row {
-                grid-template-columns: 1fr;
-                gap: 0;
-            }
+            .signup-card { padding: 1.5rem; }
+            .form-row { grid-template-columns: 1fr; gap: 0; }
         }
     </style>
 </head>
@@ -243,7 +191,7 @@
                 <div class="logo-icon">⛰️</div>
                 <div class="logo-text">Bluepeak<span>Capital</span></div>
             </div>
-            
+
             <h1>Create account</h1>
             <p class="subtitle">Start trading with institutional-grade infrastructure</p>
 
@@ -254,23 +202,23 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>First name</label>
-                        <input type="text" id="firstName" placeholder="John" required>
+                        <input type="text" id="firstName" placeholder="John" required autocomplete="given-name">
                     </div>
                     <div class="form-group">
                         <label>Last name</label>
-                        <input type="text" id="lastName" placeholder="Doe" required>
+                        <input type="text" id="lastName" placeholder="Doe" required autocomplete="family-name">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label>Email address</label>
-                    <input type="email" id="email" placeholder="john@example.com" required>
+                    <input type="email" id="email" placeholder="john@example.com" required autocomplete="email">
                 </div>
 
                 <div class="form-group">
                     <label>Password</label>
                     <div class="password-wrapper">
-                        <input type="password" id="password" placeholder="Create a password (min 8 chars)" required minlength="8">
+                        <input type="password" id="password" placeholder="Create a password (min 8 chars)" required minlength="8" autocomplete="new-password">
                         <button type="button" class="password-toggle" onclick="togglePassword('password', 'passwordIcon')">
                             <svg id="passwordIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -283,7 +231,7 @@
                 <div class="form-group">
                     <label>Confirm password</label>
                     <div class="password-wrapper">
-                        <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                        <input type="password" id="confirmPassword" placeholder="Confirm your password" required autocomplete="new-password">
                         <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')">
                             <svg id="confirmPasswordIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -302,23 +250,23 @@
         </div>
     </div>
 
-    <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // ===== Supabase Init (same project as index.html) =====
-        const SUPABASE_URL = 'https://xdwjjfvyowveqcziwssv.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_nd0hfyx5B3XmUaX1nvtu3w_NvZQU5k8';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // ===== Guard: only init once =====
+        if (!window.__supabaseClient) {
+            const SUPABASE_URL = 'https://xdwjjfvyowveqcziwssv.supabase.co';
+            const SUPABASE_ANON_KEY = 'sb_publishable_nd0hfyx5B3XmUaX1nvtu3w_NvZQU5k8';
+            window.__supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+        const sb = window.__supabaseClient;
 
         const signupForm = document.getElementById('signupForm');
         const errorDiv = document.getElementById('errorMessage');
         const successDiv = document.getElementById('successMessage');
 
-        // Password visibility toggle
-        window.togglePassword = function(fieldId, iconId) {
+        window.togglePassword = function (fieldId, iconId) {
             const field = document.getElementById(fieldId);
             const icon = document.getElementById(iconId);
-            
             if (field.type === 'password') {
                 field.type = 'text';
                 icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
@@ -326,11 +274,11 @@
                 field.type = 'password';
                 icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
             }
-        }
+        };
 
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const firstName = document.getElementById('firstName').value.trim();
             const lastName = document.getElementById('lastName').value.trim();
             const email = document.getElementById('email').value.trim();
@@ -340,15 +288,12 @@
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
 
-            // Client-side validation
             if (!firstName || !lastName || !email || !password || !confirmPassword) {
                 return showError('Please fill in all fields');
             }
-
             if (password.length < 8) {
                 return showError('Password must be at least 8 characters');
             }
-
             if (password !== confirmPassword) {
                 return showError('Passwords do not match');
             }
@@ -359,10 +304,11 @@
             submitBtn.disabled = true;
 
             try {
-                // Sign up — the DB trigger auto-creates the profiles row
-                const { data, error } = await supabase.auth.signUp({
-                    email: email,
-                    password: password,
+                console.log('[signup] calling supabase.auth.signUp for', email);
+
+                const { data, error } = await sb.auth.signUp({
+                    email,
+                    password,
                     options: {
                         data: {
                             first_name: firstName,
@@ -372,29 +318,27 @@
                     }
                 });
 
+                console.log('[signup] response:', { data, error });
+
                 if (error) {
-                    showError(error.message);
-                    return;
+                    return showError(error.message);
+                }
+                if (!data || !data.user) {
+                    return showError('Signup failed — no user returned');
                 }
 
-                if (!data.user) {
-                    showError('Signup failed — please try again');
-                    return;
-                }
-
-                // If email confirmation is OFF, data.session exists → user is logged in
+                // Email confirmation ON → data.session is null
                 if (data.session) {
                     showSuccess('Account created! Redirecting…');
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 1500);
+                    setTimeout(() => { window.location.href = 'login.html'; }, 1200);
                 } else {
-                    // Email confirmation is ON
-                    showSuccess('Check your email to confirm your account before signing in.');
+                    showSuccess('Account created! Check your email to confirm, then sign in.');
+                    // Still offer a redirect after a beat
+                    setTimeout(() => { window.location.href = 'login.html'; }, 4000);
                 }
             } catch (err) {
-                console.error(err);
-                showError('Network error. Please try again.');
+                console.error('[signup] threw:', err);
+                showError('Error: ' + (err.message || 'Unknown error — check console'));
             } finally {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
@@ -402,14 +346,13 @@
         });
 
         function showError(message) {
+            console.error('[signup] error:', message);
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 5000);
         }
 
         function showSuccess(message) {
+            console.log('[signup] success:', message);
             successDiv.textContent = message;
             successDiv.style.display = 'block';
         }
