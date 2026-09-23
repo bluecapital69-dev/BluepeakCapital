@@ -9,14 +9,6 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
     
-    <script type="importmap">
-        {
-            "imports": {
-                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
-            }
-        }
-    </script>
-    
     <style>
         * {
             margin: 0;
@@ -278,7 +270,7 @@
                 <div class="form-group">
                     <label>Password</label>
                     <div class="password-wrapper">
-                        <input type="password" id="password" placeholder="Create a password" required>
+                        <input type="password" id="password" placeholder="Create a password (min 8 chars)" required minlength="8">
                         <button type="button" class="password-toggle" onclick="togglePassword('password', 'passwordIcon')">
                             <svg id="passwordIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -310,16 +302,13 @@
         </div>
     </div>
 
-    <script type="module">
-        import { createClient } from '@supabase/supabase-js'
-
-        // UPDATED: Your new Supabase credentials
-        const supabaseUrl = 'https://nlrrnqzbotfnmltpaxvw.supabase.co'
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5scnJucXpib3Rmbm1sdHBheHZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MTI0NjYsImV4cCI6MjEwNDA4ODQ2Nn0.PphFiwnKxHJhrqq0lPo336eUEVCBZNxXmmq3usSQj9I'
-        const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-        // Make supabase available globally
-        window.supabase = supabase
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ===== Supabase Init (same project as index.html) =====
+        const SUPABASE_URL = 'https://xdwjjfvyowveqcziwssv.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_nd0hfyx5B3XmUaX1nvtu3w_NvZQU5k8';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const signupForm = document.getElementById('signupForm');
         const errorDiv = document.getElementById('errorMessage');
@@ -342,28 +331,26 @@
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const email = document.getElementById('email').value;
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
 
+            // Client-side validation
             if (!firstName || !lastName || !email || !password || !confirmPassword) {
-                showError('Please fill in all fields');
-                return;
+                return showError('Please fill in all fields');
             }
 
-            if (password.length < 6) {
-                showError('Password must be at least 6 characters');
-                return;
+            if (password.length < 8) {
+                return showError('Password must be at least 8 characters');
             }
 
             if (password !== confirmPassword) {
-                showError('Passwords do not match');
-                return;
+                return showError('Passwords do not match');
             }
 
             const submitBtn = signupForm.querySelector('.btn-primary');
@@ -372,6 +359,7 @@
             submitBtn.disabled = true;
 
             try {
+                // Sign up — the DB trigger auto-creates the profiles row
                 const { data, error } = await supabase.auth.signUp({
                     email: email,
                     password: password,
@@ -382,31 +370,30 @@
                             full_name: `${firstName} ${lastName}`
                         }
                     }
-                })
+                });
 
                 if (error) {
                     showError(error.message);
-                } else if (data.user) {
-                    try {
-                        await supabase
-                            .from('profiles')
-                            .upsert({
-                                id: data.user.id,
-                                email: email,
-                                full_name: `${firstName} ${lastName}`,
-                                created_at: new Date().toISOString()
-                            })
-                    } catch (profileErr) {
-                        console.log('Profile may already exist:', profileErr)
-                    }
-                    
-                    showSuccess('Account created! Redirecting to login...');
-                    
+                    return;
+                }
+
+                if (!data.user) {
+                    showError('Signup failed — please try again');
+                    return;
+                }
+
+                // If email confirmation is OFF, data.session exists → user is logged in
+                if (data.session) {
+                    showSuccess('Account created! Redirecting…');
                     setTimeout(() => {
                         window.location.href = 'login.html';
                     }, 1500);
+                } else {
+                    // Email confirmation is ON
+                    showSuccess('Check your email to confirm your account before signing in.');
                 }
             } catch (err) {
+                console.error(err);
                 showError('Network error. Please try again.');
             } finally {
                 submitBtn.textContent = originalText;
@@ -419,7 +406,7 @@
             errorDiv.style.display = 'block';
             setTimeout(() => {
                 errorDiv.style.display = 'none';
-            }, 4000);
+            }, 5000);
         }
 
         function showSuccess(message) {
