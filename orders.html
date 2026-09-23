@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=yes" />
-    <meta name="description" content="BluepeakCapital - View and manage your trading orders. Track open orders, order history, and filled positions." />
+    <meta name="description" content="BluepeakCapital - View and manage your trading orders." />
     <title>BluepeakCapital | Orders</title>
     <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,20 80,40 80,70 50,90 20,70 20,40' fill='%233b82f6'/%3E%3C/svg%3E" />
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
-    
-    <!-- THEME CONTROLLER - MUST BE FIRST -->
+
     <script>
-        function initTheme() {
+        (function initTheme() {
             const savedTheme = localStorage.getItem('bluepeak_theme');
             if (savedTheme === 'light') {
                 document.documentElement.setAttribute('data-theme', 'light');
@@ -19,132 +18,12 @@
                 document.documentElement.setAttribute('data-theme', 'dark');
                 localStorage.setItem('bluepeak_theme', 'dark');
             }
-        }
-        initTheme();
+        })();
     </script>
-    
-    <!-- Supabase SDK -->
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-        const supabaseUrl = 'https://txcbfzcomfyavcgqcevq.supabase.co'
-        const supabaseAnonKey = 'sb_publishable_6-gQnlgqnM20wQ9iWx5lsw_ZD7Uz5bH'
-        const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-        let currentUserId = null
-
-        async function loadUserData() {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) {
-                document.getElementById('balanceDisplay').innerHTML = '$0.00'
-                return
-            }
-            
-            currentUserId = session.user.id
-            
-            // Load user balance - FIXED: 'balances' → 'user_balances'
-            const { data } = await supabase
-                .from('user_balances')
-                .select('balance')
-                .eq('user_id', currentUserId)
-                .eq('asset', 'USD')
-                .single()
-            
-            const balance = data?.balance || 0
-            document.getElementById('balanceDisplay').innerHTML = `$${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            
-            // Load orders from Supabase
-            await loadOrdersFromSupabase()
-        }
-        
-        async function loadOrdersFromSupabase() {
-            // Load open orders (pending status)
-            const { data: openData } = await supabase
-                .from('orders')
-                .select('*')
-                .eq('user_id', currentUserId)
-                .in('status', ['pending', 'partial'])
-                .order('created_at', { ascending: false })
-            
-            if (openData && openData.length > 0) {
-                window.openOrders = openData.map(o => ({
-                    id: o.id.substring(0, 8),
-                    pair: o.pair,
-                    type: o.type,
-                    price: o.price,
-                    amount: o.amount,
-                    filled: o.filled || 0,
-                    value: o.amount * o.price,
-                    status: o.status,
-                    date: new Date(o.created_at).toLocaleString()
-                }))
-            } else {
-                window.openOrders = []
-            }
-            
-            // Load order history (filled + cancelled)
-            const { data: historyData } = await supabase
-                .from('orders')
-                .select('*')
-                .eq('user_id', currentUserId)
-                .in('status', ['filled', 'cancelled'])
-                .order('created_at', { ascending: false })
-            
-            if (historyData && historyData.length > 0) {
-                window.orderHistory = historyData.map(o => ({
-                    id: o.id.substring(0, 8),
-                    date: new Date(o.created_at).toLocaleString(),
-                    pair: o.pair,
-                    type: o.type,
-                    price: o.price,
-                    amount: o.amount,
-                    filled: o.filled || 0,
-                    status: o.status
-                }))
-            } else {
-                window.orderHistory = []
-            }
-            
-            // Load filled trades from trades table
-            const { data: tradesData } = await supabase
-                .from('trades')
-                .select('*')
-                .eq('user_id', currentUserId)
-                .order('created_at', { ascending: false })
-            
-            if (tradesData && tradesData.length > 0) {
-                window.filledOrders = tradesData.map(t => ({
-                    id: t.id.substring(0, 8),
-                    date: new Date(t.created_at).toLocaleString(),
-                    pair: t.pair,
-                    type: t.type,
-                    avgPrice: t.price,
-                    amount: t.amount,
-                    total: t.total,
-                    fee: t.fee
-                }))
-            } else {
-                window.filledOrders = []
-            }
-            
-            // Refresh UI
-            if (typeof loadOpenOrders === 'function') loadOpenOrders()
-            if (typeof loadHistoryOrders === 'function') loadHistoryOrders()
-            if (typeof loadFilledOrders === 'function') loadFilledOrders()
-            if (typeof updateSummary === 'function') updateSummary()
-        }
-        
-        loadUserData()
-    </script>
-    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* Dark Mode as Default */
         :root {
             --bg-primary: #0a0e17;
             --bg-secondary: #111827;
@@ -157,14 +36,8 @@
             --hover-bg: #374151;
             --positive: #10b981;
             --negative: #ef4444;
-            --buy-color: #10b981;
-            --sell-color: #ef4444;
-            --status-open: #10b981;
-            --status-filled: #3b82f6;
-            --status-cancelled: #ef4444;
         }
 
-        /* Light Mode */
         [data-theme="light"] {
             --bg-primary: #f5f7fb;
             --bg-secondary: #ffffff;
@@ -184,7 +57,6 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* Navigation */
         nav {
             display: flex;
             justify-content: space-between;
@@ -197,66 +69,49 @@
             z-index: 100;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            cursor: pointer;
-        }
-
+        .logo { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
         .logo-icon {
-            width: 28px;
-            height: 28px;
+            width: 28px; height: 28px;
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             border-radius: 7px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.8rem;
-            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.8rem; color: white;
         }
-
         .logo-text {
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: 1rem; font-weight: 700;
             background: linear-gradient(135deg, #3b82f6, #60a5fa);
-            -webkit-background-clip: text;
-            background-clip: text;
+            -webkit-background-clip: text; background-clip: text;
             color: transparent;
         }
 
-        /* Desktop Navigation */
-        .nav-links {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
+        .nav-links { display: flex; gap: 1rem; align-items: center; }
         .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
             font-size: 0.75rem;
             font-weight: 500;
         }
+        .nav-links a:hover, .nav-links a.active { color: #3b82f6; }
 
-        .nav-links a:hover, .nav-links a.active {
-            color: #3b82f6;
-        }
+        .right-menu { display: flex; align-items: center; gap: 0.4rem; }
 
-        /* Right Menu */
-        .right-menu {
+        .theme-toggle {
+            background: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            justify-content: center;
+            font-size: 0.8rem;
         }
 
         .flag-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            object-fit: cover;
-            cursor: pointer;
+            width: 24px; height: 24px;
+            border-radius: 50%; object-fit: cover; cursor: pointer;
         }
 
         .balance-amount {
@@ -278,51 +133,65 @@
             display: none;
         }
 
-        /* Sidebar Menu */
         .sidebar-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            inset: 0;
+            background: rgba(0,0,0,0.7);
             z-index: 2000;
             visibility: hidden;
             opacity: 0;
             transition: all 0.3s ease;
         }
-
-        .sidebar-overlay.active {
-            visibility: visible;
-            opacity: 1;
-        }
+        .sidebar-overlay.active { visibility: visible; opacity: 1; }
 
         .sidebar-menu {
             position: fixed;
             top: 0;
-            right: -280px;
-            width: 260px;
+            right: -300px;
+            width: 280px;
             height: 100%;
             background: var(--bg-secondary);
-            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+            box-shadow: -2px 0 8px rgba(0,0,0,0.3);
             z-index: 2001;
             transition: right 0.3s ease;
             display: flex;
             flex-direction: column;
-            padding: 1rem 0;
         }
-
-        .sidebar-overlay.active .sidebar-menu {
-            right: 0;
-        }
+        .sidebar-overlay.active .sidebar-menu { right: 0; }
 
         .sidebar-header {
-            padding: 1rem;
+            padding: 1.2rem;
             border-bottom: 1px solid var(--border-color);
-            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .sidebar-header .avatar-large {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .sidebar-header .user-info { display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-header .user-name {
+            font-weight: 600; font-size: 0.9rem; color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .sidebar-header .user-email {
+            font-size: 0.7rem; color: var(--text-secondary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        .sidebar-menu a {
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5rem 0;
+            overflow-y: auto;
+        }
+        .sidebar-nav a {
             display: block;
             padding: 0.8rem 1.2rem;
             color: var(--text-primary);
@@ -330,13 +199,14 @@
             font-size: 0.85rem;
             font-weight: 500;
         }
-
-        .sidebar-menu a:hover {
-            background: var(--hover-bg);
-            color: #3b82f6;
+        .sidebar-nav a:hover { background: var(--hover-bg); color: #3b82f6; }
+        .sidebar-nav .logout-item {
+            margin-top: auto;
+            border-top: 1px solid var(--border-color);
+            color: #ef4444;
         }
+        .sidebar-nav .logout-item:hover { background: rgba(239,68,68,0.1); color: #dc2626; }
 
-        /* Trust Bar */
         .trust-bar {
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border-color);
@@ -346,23 +216,15 @@
             flex-wrap: wrap;
             font-size: 0.6rem;
             color: var(--text-secondary);
-            overflow-x: auto;
         }
+        .trust-separator { width: 1px; height: 10px; background: var(--border-color); }
 
-        .trust-separator {
-            width: 1px;
-            height: 10px;
-            background: var(--border-color);
-        }
-
-        /* Main Container */
         .orders-container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 1rem;
         }
 
-        /* Page Header */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -371,12 +233,7 @@
             flex-wrap: wrap;
             gap: 0.8rem;
         }
-
-        .page-header h1 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
+        .page-header h1 { font-size: 1.3rem; font-weight: 600; color: var(--text-primary); }
 
         .cancel-all-btn {
             background: var(--hover-bg);
@@ -387,48 +244,43 @@
             font-size: 0.7rem;
             cursor: pointer;
         }
-
         .cancel-all-btn:hover {
             background: var(--negative);
             color: white;
             border-color: var(--negative);
         }
 
-        /* Summary Cards */
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 0.8rem;
             margin-bottom: 1rem;
         }
-
         .summary-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 10px;
             padding: 0.7rem;
         }
-
         .summary-label {
             font-size: 0.6rem;
             color: var(--text-secondary);
             margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
         .summary-value {
             font-size: 1rem;
             font-weight: 700;
             color: var(--text-primary);
         }
 
-        /* Tabs */
         .orders-tabs {
             display: flex;
             gap: 0.5rem;
             border-bottom: 1px solid var(--border-color);
             margin-bottom: 1rem;
         }
-
         .tab-btn {
             background: none;
             border: none;
@@ -439,22 +291,16 @@
             cursor: pointer;
             position: relative;
         }
-
-        .tab-btn.active {
-            color: #3b82f6;
-        }
-
+        .tab-btn.active { color: #3b82f6; }
         .tab-btn.active::after {
             content: '';
             position: absolute;
             bottom: -1px;
-            left: 0;
-            right: 0;
+            left: 0; right: 0;
             height: 2px;
             background: #3b82f6;
         }
 
-        /* Filters Bar */
         .filters-bar {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -467,12 +313,7 @@
             flex-wrap: wrap;
             gap: 0.8rem;
         }
-
-        .filter-group {
-            display: flex;
-            gap: 0.3rem;
-            flex-wrap: wrap;
-        }
+        .filter-group { display: flex; gap: 0.3rem; flex-wrap: wrap; }
 
         .filter-select {
             padding: 0.35rem 0.6rem;
@@ -482,7 +323,6 @@
             background: var(--bg-input);
             color: var(--text-primary);
         }
-
         .search-input {
             padding: 0.35rem 0.8rem;
             border: 1px solid var(--border-color);
@@ -492,12 +332,8 @@
             background: var(--bg-input);
             color: var(--text-primary);
         }
+        .search-input::placeholder { color: var(--text-secondary); }
 
-        .search-input::placeholder {
-            color: var(--text-secondary);
-        }
-
-        /* Tables */
         .table-container {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -512,7 +348,6 @@
             border-collapse: collapse;
             min-width: 650px;
         }
-
         .orders-table th {
             text-align: left;
             padding: 0.5rem 0.6rem;
@@ -523,12 +358,17 @@
             text-transform: uppercase;
             border-bottom: 1px solid var(--border-color);
         }
-
         .orders-table td {
             padding: 0.4rem 0.6rem;
             border-bottom: 1px solid var(--border-color);
             font-size: 0.7rem;
             color: var(--text-primary);
+        }
+
+        .empty-row {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
         }
 
         .cancel-btn {
@@ -540,10 +380,8 @@
             font-size: 0.6rem;
             cursor: pointer;
         }
-
-        .cancel-btn:hover {
-            background: #dc2626;
-        }
+        .cancel-btn:hover { background: #dc2626; }
+        .cancel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .status-open { color: #10b981; font-weight: 500; }
         .status-filled { color: #3b82f6; font-weight: 500; }
@@ -551,14 +389,12 @@
         .buy-type { color: #10b981; }
         .sell-type { color: #ef4444; }
 
-        /* Pagination */
         .pagination {
             display: flex;
             justify-content: flex-end;
             align-items: center;
             gap: 0.5rem;
         }
-
         .page-btn {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -568,77 +404,41 @@
             font-size: 0.7rem;
             color: var(--text-primary);
         }
+        .page-btn:hover { background: var(--hover-bg); }
 
-        .page-btn:hover {
-            background: var(--hover-bg);
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            z-index: 3000;
+            max-width: 320px;
         }
 
-        /* Mobile Responsive */
         @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            .hamburger-btn {
-                display: block;
-            }
-            .orders-container {
-                padding: 0.8rem;
-            }
-            .summary-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.6rem;
-            }
-            .summary-card {
-                padding: 0.5rem;
-            }
-            .summary-value {
-                font-size: 0.9rem;
-            }
-            .trust-bar {
-                display: none;
-            }
-            .filters-bar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .search-input {
-                width: 100%;
-            }
-            .filter-group {
-                justify-content: space-between;
-            }
-            .filter-select {
-                flex: 1;
-            }
-            .orders-table {
-                min-width: 550px;
-            }
-            .orders-table th {
-                padding: 0.35rem 0.4rem;
-                font-size: 0.55rem;
-            }
-            .orders-table td {
-                padding: 0.35rem 0.4rem;
-                font-size: 0.65rem;
-            }
-            .tab-btn {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.75rem;
-            }
-            .page-header h1 {
-                font-size: 1.1rem;
-            }
-            .flag-icon {
-                width: 22px;
-                height: 22px;
-            }
-            .balance-amount {
-                font-size: 0.7rem;
-                padding: 0.25rem 0.6rem;
-            }
-            .right-menu {
-                gap: 0.3rem;
-            }
+            .nav-links { display: none; }
+            .hamburger-btn { display: block; }
+            .orders-container { padding: 0.8rem; }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+            .summary-card { padding: 0.5rem; }
+            .summary-value { font-size: 0.9rem; }
+            .trust-bar { display: none; }
+            .filters-bar { flex-direction: column; align-items: stretch; }
+            .search-input { width: 100%; }
+            .filter-group { justify-content: space-between; }
+            .filter-select { flex: 1; }
+            .orders-table { min-width: 550px; }
+            .orders-table th { padding: 0.35rem 0.4rem; font-size: 0.55rem; }
+            .orders-table td { padding: 0.35rem 0.4rem; font-size: 0.65rem; }
+            .tab-btn { padding: 0.4rem 0.8rem; font-size: 0.75rem; }
+            .page-header h1 { font-size: 1.1rem; }
+            .flag-icon { width: 22px; height: 22px; }
+            .balance-amount { font-size: 0.7rem; padding: 0.25rem 0.6rem; }
+            .right-menu { gap: 0.3rem; }
         }
     </style>
 </head>
@@ -660,34 +460,37 @@
             <a href="support.html">Support</a>
         </div>
         <div class="right-menu">
-            <img src="https://flagcdn.com/w320/us.png" alt="USD" class="flag-icon" onclick="alert('Currency: USD')">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
+            <img src="https://flagcdn.com/w320/us.png" alt="USD" class="flag-icon" onclick="showToast('Currency: USD')">
             <div class="balance-amount" id="balanceDisplay">$0.00</div>
             <button class="hamburger-btn" onclick="openSidebar()">☰</button>
         </div>
     </nav>
 
-    <!-- Sidebar Menu -->
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()">
         <div class="sidebar-menu" onclick="event.stopPropagation()">
             <div class="sidebar-header">
-                <div class="logo">
-                    <div class="logo-icon">⛰️</div>
-                    <div class="logo-text">BluepeakCapital</div>
+                <div class="avatar-large" id="sidebarAvatar">U</div>
+                <div class="user-info">
+                    <span class="user-name" id="sidebarName">Loading…</span>
+                    <span class="user-email" id="sidebarEmail">…</span>
                 </div>
             </div>
-            <a href="dashboard.html">Dashboard</a>
-            <a href="trade.html">Trade</a>
-            <a href="markets.html">Markets</a>
-            <a href="orders.html">Orders</a>
-            <a href="bots.html">Bots</a>
-            <a href="deposit.html">Deposit</a>
-            <a href="withdraw.html">Withdraw</a>
-            <a href="settings.html">Settings</a>
-            <a href="support.html">Support</a>
+            <div class="sidebar-nav">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="trade.html">Trade</a>
+                <a href="markets.html">Markets</a>
+                <a href="orders.html">Orders</a>
+                <a href="bots.html">Bots</a>
+                <a href="deposit.html">Deposit</a>
+                <a href="withdraw.html">Withdraw</a>
+                <a href="settings.html">Settings</a>
+                <a href="support.html">Support</a>
+                <a href="#" class="logout-item" onclick="logout(); return false;">Logout</a>
+            </div>
         </div>
     </div>
 
-    <!-- Trust Bar -->
     <div class="trust-bar">
         <span>FINRA Member</span>
         <span class="trust-separator"></span>
@@ -704,7 +507,6 @@
             <button class="cancel-all-btn" onclick="cancelAllOrders()">Cancel All</button>
         </div>
 
-        <!-- Summary Cards -->
         <div class="summary-grid">
             <div class="summary-card">
                 <div class="summary-label">Open Orders</div>
@@ -724,14 +526,12 @@
             </div>
         </div>
 
-        <!-- Tabs -->
         <div class="orders-tabs">
-            <button class="tab-btn active" onclick="switchTab('open')">Open</button>
-            <button class="tab-btn" onclick="switchTab('history')">History</button>
-            <button class="tab-btn" onclick="switchTab('filled')">Filled</button>
+            <button class="tab-btn active" onclick="switchTab('open', this)">Open</button>
+            <button class="tab-btn" onclick="switchTab('history', this)">History</button>
+            <button class="tab-btn" onclick="switchTab('filled', this)">Filled</button>
         </div>
 
-        <!-- Filters -->
         <div class="filters-bar">
             <div class="filter-group">
                 <select class="filter-select" id="pairFilter" onchange="applyFilters()">
@@ -750,34 +550,47 @@
             <input type="text" class="search-input" id="searchInput" placeholder="Search" onkeyup="applyFilters()">
         </div>
 
-        <!-- Open Orders Tab -->
+        <!-- OPEN -->
         <div id="openTab" class="tab-content">
             <div class="table-container">
                 <table class="orders-table">
                     <thead>
-                        <tr><th>ID</th><th>Pair</th><th>Type</th><th>Price</th><th>Amount</th><th>Filled</th><th>Value</th><th>Status</th><th></th></tr>
+                        <tr>
+                            <th>ID</th><th>Pair</th><th>Type</th><th>Order Type</th>
+                            <th>Price</th><th>Amount</th><th>Value</th><th>Status</th><th></th>
+                        </tr>
                     </thead>
-                    <tbody id="openOrdersBody"></tbody>
+                    <tbody id="openOrdersBody">
+                        <tr><td colspan="9" class="empty-row">Loading…</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Order History Tab -->
+        <!-- HISTORY -->
         <div id="historyTab" class="tab-content" style="display: none;">
             <div class="table-container">
                 <table class="orders-table">
-                    <thead><tr><th>ID</th><th>Date</th><th>Pair</th><th>Type</th><th>Price</th><th>Amount</th><th>Filled</th><th>Status</th></tr></thead>
-                    <tbody id="historyOrdersBody"></tbody>
+                    <thead>
+                        <tr><th>ID</th><th>Date</th><th>Pair</th><th>Type</th><th>Order Type</th><th>Price</th><th>Amount</th><th>Status</th></tr>
+                    </thead>
+                    <tbody id="historyOrdersBody">
+                        <tr><td colspan="8" class="empty-row">Loading…</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Filled Orders Tab -->
+        <!-- FILLED -->
         <div id="filledTab" class="tab-content" style="display: none;">
             <div class="table-container">
                 <table class="orders-table">
-                    <thead><tr><th>ID</th><th>Date</th><th>Pair</th><th>Type</th><th>Avg Price</th><th>Amount</th><th>Total</th><th>Fee</th></tr></thead>
-                    <tbody id="filledOrdersBody"></tbody>
+                    <thead>
+                        <tr><th>ID</th><th>Date</th><th>Pair</th><th>Type</th><th>Price</th><th>Amount</th><th>Total</th><th>Fee</th></tr>
+                    </thead>
+                    <tbody id="filledOrdersBody">
+                        <tr><td colspan="8" class="empty-row">Loading…</td></tr>
+                    </tbody>
                 </table>
             </div>
             <div class="pagination">
@@ -788,178 +601,350 @@
         </div>
     </div>
 
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        let openOrders = []
-        let orderHistory = []
-        let filledOrders = []
-        
-        let currentTab = "open"
-        let currentPage = 1
+        // ===== Supabase Init (matches every other page) =====
+        const SUPABASE_URL = 'https://xdwjjfvyowveqcziwssv.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_nd0hfyx5B3XmUaX1nvtu3w_NvZQU5k8';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function loadOpenOrders() {
-            const tbody = document.getElementById('openOrdersBody')
-            const pairFilter = document.getElementById('pairFilter').value
-            const typeFilter = document.getElementById('typeFilter').value
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase()
-            
-            let filtered = openOrders.filter(order => {
-                if (pairFilter !== 'all' && order.pair !== pairFilter) return false
-                if (typeFilter !== 'all' && order.type !== typeFilter) return false
-                if (searchTerm && !order.id.toLowerCase().includes(searchTerm) && !order.pair.toLowerCase().includes(searchTerm)) return false
-                return true
-            })
-            
-            document.getElementById('openOrdersCount').innerHTML = filtered.length
-            
-            if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem;">No open orders</div></div> </div>'
-                return
+        // ===== State =====
+        let currentUserId = null;
+        let openOrders = [];       // pending/partial from `orders`
+        let orderHistory = [];     // filled/cancelled/expired from `orders`
+        let filledOrders = [];     // executed from `trades`
+        let currentTab = 'open';
+        let currentPage = 1;
+        let itemsPerPage = 25;
+
+        // ===== Auth + load =====
+        async function init() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = 'login.html'; return; }
+            currentUserId = session.user.id;
+
+            // Profile for sidebar
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUserId)
+                .maybeSingle();
+
+            updateSidebarUser(profile || {
+                full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+                email: session.user.email
+            });
+
+            // USD balance
+            const { data: bal } = await supabase
+                .from('user_balances')
+                .select('balance')
+                .eq('user_id', currentUserId)
+                .eq('asset', 'USD')
+                .maybeSingle();
+
+            const b = Number(bal?.balance || 0);
+            document.getElementById('balanceDisplay').innerHTML =
+                `$${b.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            await Promise.all([loadOrders(), loadTrades()]);
+            renderAll();
+        }
+
+        async function loadOrders() {
+            const { data, error } = await supabase
+                .from('orders')
+                .select('*')
+                .eq('user_id', currentUserId)
+                .order('created_at', { ascending: false });
+
+            if (error) { console.error('orders:', error.message); return; }
+
+            const all = data || [];
+            openOrders = all
+                .filter(o => o.status === 'pending' || o.status === 'partial')
+                .map(mapOrder);
+
+            orderHistory = all
+                .filter(o => o.status === 'filled' || o.status === 'cancelled')
+                .map(mapOrder);
+        }
+
+        async function loadTrades() {
+            const { data, error } = await supabase
+                .from('trades')
+                .select('*')
+                .eq('user_id', currentUserId)
+                .order('created_at', { ascending: false });
+
+            if (error) { console.error('trades:', error.message); return; }
+            filledOrders = (data || []).map(mapTrade);
+        }
+
+        function mapOrder(o) {
+            return {
+                id: o.id,
+                shortId: String(o.id).substring(0, 8),
+                pair: o.pair,
+                type: o.type,
+                orderType: o.order_type || 'limit',
+                price: Number(o.price) || 0,
+                amount: Number(o.amount) || 0,
+                filled: Number(o.filled) || 0,
+                value: (Number(o.amount) || 0) * (Number(o.price) || 0),
+                status: o.status,
+                date: new Date(o.created_at).toLocaleString()
+            };
+        }
+
+        function mapTrade(t) {
+            return {
+                id: t.id,
+                shortId: String(t.id).substring(0, 8),
+                pair: t.pair,
+                type: t.type,
+                price: Number(t.price) || 0,
+                amount: Number(t.amount) || 0,
+                total: Number(t.total) || 0,
+                fee: Number(t.fee) || 0,
+                date: new Date(t.created_at).toLocaleString()
+            };
+        }
+
+        function updateSidebarUser(user) {
+            const fullName = user.full_name || 'User';
+            const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'U';
+            document.getElementById('sidebarName').textContent = fullName;
+            document.getElementById('sidebarEmail').textContent = user.email || '';
+            document.getElementById('sidebarAvatar').textContent = initials;
+        }
+
+        // ===== Renderers (FIXED: proper <td> closing tags) =====
+        function renderOpenOrders() {
+            const tbody = document.getElementById('openOrdersBody');
+            const pairFilter = document.getElementById('pairFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = openOrders.filter(o => {
+                if (pairFilter !== 'all' && o.pair !== pairFilter) return false;
+                if (typeFilter !== 'all' && o.type !== typeFilter) return false;
+                if (searchTerm &&
+                    !o.shortId.toLowerCase().includes(searchTerm) &&
+                    !o.pair.toLowerCase().includes(searchTerm)) return false;
+                return true;
+            });
+
+            document.getElementById('openOrdersCount').textContent = filtered.length;
+
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="9" class="empty-row">No open orders</td></tr>';
+                return;
             }
-            
-            tbody.innerHTML = filtered.map(order => `
+
+            tbody.innerHTML = filtered.map(o => `
                 <tr>
-                    <td>${order.id}</div>
-                    <td>${order.pair}</div>
-                    <td class="${order.type === 'buy' ? 'buy-type' : 'sell-type'}">${order.type.toUpperCase()}</div>
-                    <td>$${order.price.toLocaleString()}</div>
-                    <td>${order.amount} ${order.pair.split('/')[0]}</div>
-                    <td>${order.filled}%</div>
-                    <td>$${order.value.toLocaleString()}</div>
-                    <td class="status-open">${order.status === 'partial' ? 'Partial' : 'Open'}</div>
-                    <td><button class="cancel-btn" onclick="cancelOrder('${order.id}')">Cancel</button></div>
+                    <td>${o.shortId}</td>
+                    <td>${o.pair}</td>
+                    <td class="${o.type === 'buy' ? 'buy-type' : 'sell-type'}">${o.type.toUpperCase()}</td>
+                    <td>${o.orderType}</td>
+                    <td>$${o.price.toLocaleString()}</td>
+                    <td>${o.amount} ${o.pair.split('/')[0]}</td>
+                    <td>$${o.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                    <td class="status-open">${o.status === 'partial' ? 'Partial' : 'Open'}</td>
+                    <td><button class="cancel-btn" onclick="cancelOrder('${o.id}')">Cancel</button></td>
                 </tr>
-            `).join('')
+            `).join('');
         }
 
-        function loadHistoryOrders() {
-            const tbody = document.getElementById('historyOrdersBody')
-            const pairFilter = document.getElementById('pairFilter').value
-            const typeFilter = document.getElementById('typeFilter').value
-            
-            let filtered = orderHistory.filter(order => {
-                if (pairFilter !== 'all' && order.pair !== pairFilter) return false
-                if (typeFilter !== 'all' && order.type !== typeFilter) return false
-                return true
-            })
-            
-            if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem;">No order history</div></div> </div>'
-                return
+        function renderHistoryOrders() {
+            const tbody = document.getElementById('historyOrdersBody');
+            const pairFilter = document.getElementById('pairFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = orderHistory.filter(o => {
+                if (pairFilter !== 'all' && o.pair !== pairFilter) return false;
+                if (typeFilter !== 'all' && o.type !== typeFilter) return false;
+                if (searchTerm &&
+                    !o.shortId.toLowerCase().includes(searchTerm) &&
+                    !o.pair.toLowerCase().includes(searchTerm)) return false;
+                return true;
+            });
+
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-row">No order history</td></tr>';
+                return;
             }
-            
-            tbody.innerHTML = filtered.map(order => `
+
+            tbody.innerHTML = filtered.map(o => `
                 <tr>
-                    <td>${order.id}</div>
-                    <td>${order.date}</div>
-                    <td>${order.pair}</div>
-                    <td class="${order.type === 'buy' ? 'buy-type' : 'sell-type'}">${order.type.toUpperCase()}</div>
-                    <td>$${order.price.toLocaleString()}</div>
-                    <td>${order.amount} ${order.pair.split('/')[0]}</div>
-                    <td>${order.filled}%</div>
-                    <td class="${order.status === 'filled' ? 'status-filled' : 'status-cancelled'}">${order.status.toUpperCase()}</div>
+                    <td>${o.shortId}</td>
+                    <td>${o.date}</td>
+                    <td>${o.pair}</td>
+                    <td class="${o.type === 'buy' ? 'buy-type' : 'sell-type'}">${o.type.toUpperCase()}</td>
+                    <td>${o.orderType}</td>
+                    <td>$${o.price.toLocaleString()}</td>
+                    <td>${o.amount} ${o.pair.split('/')[0]}</td>
+                    <td class="${o.status === 'filled' ? 'status-filled' : 'status-cancelled'}">${o.status.toUpperCase()}</td>
                 </tr>
-            `).join('')
+            `).join('');
         }
 
-        function loadFilledOrders() {
-            const tbody = document.getElementById('filledOrdersBody')
-            
-            if (filledOrders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem;">No filled orders</div></div> </div>'
-                return
+        function renderFilledOrders() {
+            const tbody = document.getElementById('filledOrdersBody');
+
+            if (!filledOrders.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-row">No filled orders</td></tr>';
+                document.getElementById('pageInfo').textContent = 'Page 1';
+                return;
             }
-            
-            tbody.innerHTML = filledOrders.map(order => `
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageItems = filledOrders.slice(start, end);
+
+            tbody.innerHTML = pageItems.map(t => `
                 <tr>
-                    <td>${order.id}</div>
-                    <td>${order.date}</div>
-                    <td>${order.pair}</div>
-                    <td class="${order.type === 'buy' ? 'buy-type' : 'sell-type'}">${order.type.toUpperCase()}</div>
-                    <td>$${order.avgPrice.toLocaleString()}</div>
-                    <td>${order.amount} ${order.pair.split('/')[0]}</div>
-                    <td>$${order.total.toLocaleString()}</div>
-                    <td>$${order.fee.toFixed(2)}</div>
+                    <td>${t.shortId}</td>
+                    <td>${t.date}</td>
+                    <td>${t.pair}</td>
+                    <td class="${t.type === 'buy' ? 'buy-type' : 'sell-type'}">${t.type.toUpperCase()}</td>
+                    <td>$${t.price.toLocaleString()}</td>
+                    <td>${t.amount} ${t.pair.split('/')[0]}</td>
+                    <td>$${t.total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                    <td>$${t.fee.toFixed(2)}</td>
                 </tr>
-            `).join('')
+            `).join('');
+
+            const totalPages = Math.max(1, Math.ceil(filledOrders.length / itemsPerPage));
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
         }
 
-        function cancelOrder(orderId) {
-            if (confirm(`Cancel order ${orderId}?`)) {
-                const orderIndex = openOrders.findIndex(o => o.id === orderId)
-                if (orderIndex !== -1) {
-                    const cancelledOrder = openOrders[orderIndex]
-                    openOrders.splice(orderIndex, 1)
-                    orderHistory.unshift({ ...cancelledOrder, status: "cancelled", date: new Date().toLocaleString() })
-                    loadOpenOrders()
-                    loadHistoryOrders()
-                    updateSummary()
-                    showToast(`Order ${orderId} cancelled`)
-                }
-            }
+        function renderAll() {
+            renderOpenOrders();
+            renderHistoryOrders();
+            renderFilledOrders();
+            updateSummary();
         }
 
-        function cancelAllOrders() {
-            if (openOrders.length === 0) { showToast('No open orders'); return }
-            if (confirm(`Cancel all ${openOrders.length} open orders?`)) {
-                openOrders.forEach(order => {
-                    orderHistory.unshift({ ...order, status: "cancelled", date: new Date().toLocaleString() })
-                })
-                openOrders = []
-                loadOpenOrders()
-                loadHistoryOrders()
-                updateSummary()
-                showToast('All orders cancelled')
-            }
-        }
+        // ===== Cancel =====
+        window.cancelOrder = async function (orderId) {
+            if (!confirm('Cancel this order?')) return;
+            const { error } = await supabase
+                .from('orders')
+                .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+                .eq('id', orderId)
+                .eq('user_id', currentUserId);
 
-        function applyFilters() {
-            if (currentTab === 'open') loadOpenOrders()
-            else if (currentTab === 'history') loadHistoryOrders()
-        }
+            if (error) { showToast(error.message); return; }
+            showToast('Order cancelled');
+            await Promise.all([loadOrders(), loadTrades()]);
+            renderAll();
+        };
 
-        function switchTab(tab) {
-            currentTab = tab
-            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none')
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
-            if (tab === 'open') {
-                document.getElementById('openTab').style.display = 'block'
-                document.querySelector('.tab-btn:nth-child(1)').classList.add('active')
-                loadOpenOrders()
-            } else if (tab === 'history') {
-                document.getElementById('historyTab').style.display = 'block'
-                document.querySelector('.tab-btn:nth-child(2)').classList.add('active')
-                loadHistoryOrders()
-            } else if (tab === 'filled') {
-                document.getElementById('filledTab').style.display = 'block'
-                document.querySelector('.tab-btn:nth-child(3)').classList.add('active')
-                loadFilledOrders()
-            }
-        }
+        window.cancelAllOrders = async function () {
+            if (!openOrders.length) return showToast('No open orders');
+            if (!confirm(`Cancel all ${openOrders.length} open orders?`)) return;
 
+            const ids = openOrders.map(o => o.id);
+            const { error } = await supabase
+                .from('orders')
+                .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+                .in('id', ids)
+                .eq('user_id', currentUserId);
+
+            if (error) { showToast(error.message); return; }
+            showToast('All orders cancelled');
+            await Promise.all([loadOrders(), loadTrades()]);
+            renderAll();
+        };
+
+        // ===== Tabs (FIXED: btn passed explicitly) =====
+        window.switchTab = function (tab, btn) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            if (tab === 'open') document.getElementById('openTab').style.display = 'block';
+            else if (tab === 'history') document.getElementById('historyTab').style.display = 'block';
+            else if (tab === 'filled') document.getElementById('filledTab').style.display = 'block';
+
+            if (tab === 'open') renderOpenOrders();
+            else if (tab === 'history') renderHistoryOrders();
+            else renderFilledOrders();
+        };
+
+        window.applyFilters = function () {
+            if (currentTab === 'open') renderOpenOrders();
+            else if (currentTab === 'history') renderHistoryOrders();
+            else renderFilledOrders();
+        };
+
+        // ===== Summary =====
         function updateSummary() {
-            document.getElementById('openOrdersCount').innerHTML = openOrders.length
-            document.getElementById('totalFilled').innerHTML = filledOrders.length
-            document.getElementById('totalCancelled').innerHTML = orderHistory.filter(o => o.status === 'cancelled').length
-            document.getElementById('todayVolume').innerHTML = `$${filledOrders.reduce((sum, o) => sum + o.total, 0).toLocaleString()}`
+            document.getElementById('openOrdersCount').textContent = openOrders.length;
+            document.getElementById('totalFilled').textContent = filledOrders.length;
+            document.getElementById('totalCancelled').textContent =
+                orderHistory.filter(o => o.status === 'cancelled').length;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayVolume = filledOrders
+                .filter(t => new Date(t.date) >= today)
+                .reduce((sum, t) => sum + t.total, 0);
+            document.getElementById('todayVolume').textContent =
+                `$${todayVolume.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
         }
 
+        // ===== Pagination =====
+        window.prevPage = function () {
+            if (currentPage > 1) { currentPage--; renderFilledOrders(); }
+        };
+        window.nextPage = function () {
+            const max = Math.max(1, Math.ceil(filledOrders.length / itemsPerPage));
+            if (currentPage < max) { currentPage++; renderFilledOrders(); }
+        };
+
+        // ===== Theme =====
+        window.toggleTheme = function () {
+            const cur = document.documentElement.getAttribute('data-theme');
+            const next = cur === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('bluepeak_theme', next);
+            updateThemeBtn();
+        };
+        function updateThemeBtn() {
+            const btn = document.getElementById('themeToggleBtn');
+            if (!btn) return;
+            btn.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙';
+        }
+
+        // ===== Sidebar =====
+        window.openSidebar = () => document.getElementById('sidebarOverlay').classList.add('active');
+        window.closeSidebar = () => document.getElementById('sidebarOverlay').classList.remove('active');
+
+        window.logout = async function () {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        };
+
+        // ===== Toast =====
         function showToast(msg) {
-            const toast = document.createElement('div')
-            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.7rem; z-index: 1000;'
-            toast.textContent = msg
-            document.body.appendChild(toast)
-            setTimeout(() => toast.remove(), 2000)
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
         }
 
-        function prevPage() { if (currentPage > 1) { currentPage--; document.getElementById('pageInfo').innerHTML = `Page ${currentPage}`; loadFilledOrders() } }
-        function nextPage() { currentPage++; document.getElementById('pageInfo').innerHTML = `Page ${currentPage}`; loadFilledOrders() }
-        function openSidebar() { document.getElementById('sidebarOverlay').classList.add('active') }
-        function closeSidebar() { document.getElementById('sidebarOverlay').classList.remove('active') }
-
-        loadOpenOrders()
-        loadHistoryOrders()
-        loadFilledOrders()
-        updateSummary()
+        // ===== Boot =====
+        (async () => {
+            updateThemeBtn();
+            await init();
+        })();
     </script>
 </body>
 </html>
