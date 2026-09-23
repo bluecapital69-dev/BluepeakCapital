@@ -6,172 +6,23 @@
     <meta name="description" content="BluepeakCapital - Manage your account settings, security, and preferences." />
     <title>BluepeakCapital | Account Settings</title>
     <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,20 80,40 80,70 50,90 20,70 20,40' fill='%233b82f6'/%3E%3C/svg%3E" />
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
-    
-    <!-- Theme Controller - Must be loaded first -->
+
     <script>
-        function initTheme() {
+        (function initTheme() {
             const savedTheme = localStorage.getItem('bluepeak_theme');
             if (savedTheme === 'light') {
                 document.documentElement.setAttribute('data-theme', 'light');
-                updateThemeButtonsUI('light');
             } else {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 localStorage.setItem('bluepeak_theme', 'dark');
-                updateThemeButtonsUI('dark');
             }
-        }
-        
-        function updateThemeButtonsUI(theme) {
-            setTimeout(() => {
-                const darkBtn = document.getElementById('themeDarkBtn');
-                const lightBtn = document.getElementById('themeLightBtn');
-                if (darkBtn && lightBtn) {
-                    if (theme === 'dark') {
-                        darkBtn.classList.add('active');
-                        lightBtn.classList.remove('active');
-                    } else {
-                        lightBtn.classList.add('active');
-                        darkBtn.classList.remove('active');
-                    }
-                }
-            }, 100);
-        }
-        
-        window.setTheme = function(theme) {
-            localStorage.setItem('bluepeak_theme', theme);
-            document.documentElement.setAttribute('data-theme', theme);
-            updateThemeButtonsUI(theme);
-            showToastMessage(`${theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'} activated`);
-        };
-        
-        function showToastMessage(msg) {
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.7rem; z-index: 1000;';
-            toast.textContent = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
-        }
-        
-        initTheme();
+        })();
     </script>
-    
-    <!-- Supabase SDK -->
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-        const supabaseUrl = 'https://txcbfzcomfyavcgqcevq.supabase.co'
-        const supabaseAnonKey = 'sb_publishable_6-gQnlgqnM20wQ9iWx5lsw_ZD7Uz5bH'
-        const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-        let currentUserId = null
-
-        async function loadUserProfile() {
-            const { data: { session } } = await supabase.auth.getSession()
-            
-            if (!session) {
-                window.location.href = 'login.html'
-                return
-            }
-            
-            currentUserId = session.user.id
-            
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentUserId)
-                .single()
-            
-            if (profile) {
-                const fullName = profile.full_name || session.user.email?.split('@')[0] || 'User'
-                const firstName = fullName.split(' ')[0] || fullName
-                const lastName = fullName.split(' ')[1] || ''
-                const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-                
-                document.getElementById('profileAvatar').textContent = initials
-                document.getElementById('profileName').textContent = fullName
-                document.getElementById('profileEmail').textContent = session.user.email
-                
-                document.getElementById('firstName').value = firstName
-                document.getElementById('lastName').value = lastName
-                document.getElementById('email').value = session.user.email
-                document.getElementById('phone').value = profile.phone || ''
-                document.getElementById('country').value = profile.country || 'US'
-            }
-        }
-        
-        window.saveProfile = async function() {
-            const firstName = document.getElementById('firstName').value
-            const lastName = document.getElementById('lastName').value
-            const phone = document.getElementById('phone').value
-            const country = document.getElementById('country').value
-            
-            const fullName = `${firstName} ${lastName}`.trim()
-            
-            const { error } = await supabase
-                .from('profiles')
-                .update({
-                    full_name: fullName,
-                    phone: phone,
-                    country: country,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', currentUserId)
-            
-            if (error) {
-                alert('Error updating profile: ' + error.message)
-            } else {
-                alert('Profile updated successfully')
-                const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-                document.getElementById('profileAvatar').textContent = initials
-                document.getElementById('profileName').textContent = fullName
-            }
-        }
-        
-        window.updatePassword = async function() {
-            const currentPassword = document.getElementById('currentPassword').value
-            const newPassword = document.getElementById('newPassword').value
-            const confirmPassword = document.getElementById('confirmPassword').value
-            
-            if (!currentPassword || !newPassword || !confirmPassword) {
-                alert('Please fill in all password fields')
-                return
-            }
-            
-            if (newPassword !== confirmPassword) {
-                alert('New passwords do not match')
-                return
-            }
-            
-            if (newPassword.length < 6) {
-                alert('Password must be at least 6 characters')
-                return
-            }
-            
-            const { error } = await supabase.auth.updateUser({
-                password: newPassword
-            })
-            
-            if (error) {
-                alert('Error: ' + error.message)
-            } else {
-                alert('Password updated successfully')
-                document.getElementById('currentPassword').value = ''
-                document.getElementById('newPassword').value = ''
-                document.getElementById('confirmPassword').value = ''
-            }
-        }
-        
-        loadUserProfile()
-    </script>
-    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
             --bg-primary: #0a0e17;
@@ -220,64 +71,46 @@
             z-index: 100;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            cursor: pointer;
-        }
-
+        .logo { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
         .logo-icon {
-            width: 28px;
-            height: 28px;
+            width: 28px; height: 28px;
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             border-radius: 7px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.8rem;
-            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.8rem; color: white;
         }
-
         .logo-text {
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: 1rem; font-weight: 700;
             background: linear-gradient(135deg, #3b82f6, #60a5fa);
-            -webkit-background-clip: text;
-            background-clip: text;
+            -webkit-background-clip: text; background-clip: text;
             color: transparent;
         }
 
-        .nav-links {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
+        .nav-links { display: flex; gap: 1rem; align-items: center; }
         .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
             font-size: 0.75rem;
             font-weight: 500;
         }
+        .nav-links a:hover, .nav-links a.active { color: #3b82f6; }
 
-        .nav-links a:hover, .nav-links a.active {
-            color: #3b82f6;
-        }
+        .right-menu { display: flex; align-items: center; gap: 0.5rem; }
 
-        .right-menu {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .theme-toggle {
+            background: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem;
         }
 
         .flag-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            object-fit: cover;
-            cursor: pointer;
+            width: 28px; height: 28px;
+            border-radius: 50%; object-fit: cover; cursor: pointer;
         }
 
         .hamburger-btn {
@@ -292,48 +125,63 @@
 
         .sidebar-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            inset: 0;
+            background: rgba(0,0,0,0.7);
             z-index: 2000;
             visibility: hidden;
             opacity: 0;
             transition: all 0.3s ease;
         }
-
-        .sidebar-overlay.active {
-            visibility: visible;
-            opacity: 1;
-        }
+        .sidebar-overlay.active { visibility: visible; opacity: 1; }
 
         .sidebar-menu {
             position: fixed;
             top: 0;
-            right: -280px;
-            width: 260px;
+            right: -300px;
+            width: 280px;
             height: 100%;
             background: var(--bg-secondary);
-            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+            box-shadow: -2px 0 8px rgba(0,0,0,0.3);
             z-index: 2001;
             transition: right 0.3s ease;
             display: flex;
             flex-direction: column;
-            padding: 1rem 0;
         }
-
-        .sidebar-overlay.active .sidebar-menu {
-            right: 0;
-        }
+        .sidebar-overlay.active .sidebar-menu { right: 0; }
 
         .sidebar-header {
-            padding: 1rem;
+            padding: 1.2rem;
             border-bottom: 1px solid var(--border-color);
-            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .sidebar-header .avatar-large {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .sidebar-header .user-info { display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-header .user-name {
+            font-weight: 600; font-size: 0.9rem; color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .sidebar-header .user-email {
+            font-size: 0.7rem; color: var(--text-secondary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        .sidebar-menu a {
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5rem 0;
+            overflow-y: auto;
+        }
+        .sidebar-nav a {
             display: block;
             padding: 0.8rem 1.2rem;
             color: var(--text-primary);
@@ -341,11 +189,13 @@
             font-size: 0.85rem;
             font-weight: 500;
         }
-
-        .sidebar-menu a:hover {
-            background: var(--hover-bg);
-            color: #3b82f6;
+        .sidebar-nav a:hover { background: var(--hover-bg); color: #3b82f6; }
+        .sidebar-nav .logout-item {
+            margin-top: auto;
+            border-top: 1px solid var(--border-color);
+            color: #ef4444;
         }
+        .sidebar-nav .logout-item:hover { background: rgba(239,68,68,0.1); color: #dc2626; }
 
         .trust-bar {
             background: var(--bg-secondary);
@@ -356,14 +206,8 @@
             flex-wrap: wrap;
             font-size: 0.6rem;
             color: var(--text-secondary);
-            overflow-x: auto;
         }
-
-        .trust-separator {
-            width: 1px;
-            height: 10px;
-            background: var(--border-color);
-        }
+        .trust-separator { width: 1px; height: 10px; background: var(--border-color); }
 
         .settings-container {
             max-width: 1200px;
@@ -371,23 +215,15 @@
             padding: 1rem;
         }
 
-        .page-header {
-            margin-bottom: 1rem;
-        }
-
+        .page-header { margin-bottom: 1rem; }
         .page-header h1 {
             font-size: 1.3rem;
             font-weight: 600;
             margin-bottom: 0.3rem;
             color: var(--text-primary);
         }
+        .page-header p { color: var(--text-secondary); font-size: 0.75rem; }
 
-        .page-header p {
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-        }
-
-        /* Theme Selector Card - Visible at top */
         .theme-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -395,19 +231,13 @@
             padding: 1rem;
             margin-bottom: 1rem;
         }
-
         .theme-title {
             font-size: 0.9rem;
             font-weight: 600;
             margin-bottom: 0.8rem;
             color: var(--text-primary);
         }
-
-        .theme-selector {
-            display: flex;
-            gap: 1rem;
-        }
-
+        .theme-selector { display: flex; gap: 1rem; }
         .theme-btn {
             flex: 1;
             display: flex;
@@ -423,16 +253,13 @@
             font-size: 0.85rem;
             font-weight: 500;
             color: var(--text-primary);
+            font-family: inherit;
         }
-
         .theme-btn.active {
             border-color: #3b82f6;
-            background: rgba(59, 130, 246, 0.15);
+            background: rgba(59,130,246,0.15);
         }
-
-        .theme-btn:hover {
-            border-color: #3b82f6;
-        }
+        .theme-btn:hover { border-color: #3b82f6; }
 
         .settings-grid {
             display: grid;
@@ -456,42 +283,26 @@
             border-bottom: 1px solid var(--border-color);
             margin-bottom: 0.8rem;
         }
-
         .profile-avatar {
-            width: 60px;
-            height: 60px;
+            width: 60px; height: 60px;
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 1.5rem;
             margin: 0 auto 0.8rem;
         }
-
         .profile-name {
             font-weight: 600;
             font-size: 0.9rem;
             color: var(--text-primary);
             margin-bottom: 0.2rem;
         }
+        .profile-email { font-size: 0.65rem; color: var(--text-secondary); }
 
-        .profile-email {
-            font-size: 0.65rem;
-            color: var(--text-secondary);
-        }
-
-        .sidebar-menu {
-            list-style: none;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 0.2rem;
-        }
-
-        .sidebar-menu a {
+        /* FIXED: renamed to avoid conflict with mobile sidebar-menu */
+        .settings-nav { list-style: none; }
+        .settings-nav li { margin-bottom: 0.2rem; }
+        .settings-nav a {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -500,9 +311,9 @@
             text-decoration: none;
             border-radius: 8px;
             font-size: 0.75rem;
+            cursor: pointer;
         }
-
-        .sidebar-menu a:hover, .sidebar-menu a.active {
+        .settings-nav a:hover, .settings-nav a.active {
             background: var(--hover-bg);
             color: #3b82f6;
         }
@@ -529,11 +340,7 @@
             gap: 1rem;
             margin-bottom: 1rem;
         }
-
-        .form-group {
-            margin-bottom: 0.8rem;
-        }
-
+        .form-group { margin-bottom: 0.8rem; }
         .form-group label {
             display: block;
             font-size: 0.65rem;
@@ -541,7 +348,6 @@
             margin-bottom: 0.2rem;
             font-weight: 500;
         }
-
         .form-group input, .form-group select {
             width: 100%;
             padding: 0.5rem;
@@ -552,11 +358,11 @@
             background: var(--bg-input);
             color: var(--text-primary);
         }
-
-        .form-group input:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
         }
+        .form-group input:disabled { opacity: 0.7; cursor: not-allowed; }
 
         .btn-primary {
             background: var(--btn-primary);
@@ -567,11 +373,10 @@
             font-size: 0.75rem;
             font-weight: 500;
             cursor: pointer;
+            font-family: inherit;
         }
-
-        .btn-primary:hover {
-            background: var(--btn-primary-hover);
-        }
+        .btn-primary:hover { background: var(--btn-primary-hover); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .btn-outline {
             background: transparent;
@@ -581,11 +386,9 @@
             font-size: 0.75rem;
             cursor: pointer;
             color: var(--text-primary);
+            font-family: inherit;
         }
-
-        .btn-outline:hover {
-            background: var(--hover-bg);
-        }
+        .btn-outline:hover { background: var(--hover-bg); }
 
         .btn-danger {
             background: var(--btn-danger);
@@ -595,11 +398,9 @@
             border-radius: 8px;
             font-size: 0.75rem;
             cursor: pointer;
+            font-family: inherit;
         }
-
-        .btn-danger:hover {
-            background: var(--btn-danger-hover);
-        }
+        .btn-danger:hover { background: var(--btn-danger-hover); }
 
         .twofa-status {
             display: flex;
@@ -610,8 +411,8 @@
             border-radius: 8px;
             margin-bottom: 0.8rem;
             font-size: 0.75rem;
+            color: var(--text-primary);
         }
-
         .twofa-enabled { color: #10b981; font-weight: 500; }
         .twofa-disabled { color: #ef4444; font-weight: 500; }
 
@@ -624,20 +425,17 @@
             border-radius: 8px;
             margin-bottom: 0.6rem;
         }
-
         .api-key-name, .device-name {
             font-weight: 600;
             font-size: 0.75rem;
             color: var(--text-primary);
         }
-
         .api-key-perms, .device-details {
             font-size: 0.6rem;
             color: var(--text-secondary);
         }
-
         .device-current {
-            background: rgba(16, 185, 129, 0.1);
+            background: rgba(16,185,129,0.1);
             border-color: #10b981;
         }
 
@@ -647,8 +445,8 @@
             padding: 1rem;
             text-align: center;
             margin-bottom: 1rem;
+            color: var(--text-primary);
         }
-
         .kyc-status {
             display: inline-block;
             padding: 0.2rem 0.8rem;
@@ -657,47 +455,33 @@
             font-weight: 600;
             margin-top: 0.3rem;
         }
+        .kyc-verified { background: rgba(16,185,129,0.15); color: #10b981; }
+        .kyc-pending { background: rgba(245,158,11,0.15); color: #f59e0b; }
 
-        .kyc-verified { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-        .kyc-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            z-index: 3000;
+            max-width: 320px;
+        }
 
         @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            .hamburger-btn {
-                display: block;
-            }
-            .settings-grid {
-                grid-template-columns: 1fr;
-                gap: 0.8rem;
-            }
-            .settings-container {
-                padding: 0.8rem;
-            }
-            .trust-bar {
-                display: none;
-            }
-            .settings-sidebar {
-                position: static;
-                padding: 0.6rem;
-            }
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 0.8rem;
-            }
-            .profile-avatar {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
-            }
-            .theme-selector {
-                flex-direction: column;
-            }
-            .flag-icon {
-                width: 24px;
-                height: 24px;
-            }
+            .nav-links { display: none; }
+            .hamburger-btn { display: block; }
+            .settings-grid { grid-template-columns: 1fr; gap: 0.8rem; }
+            .settings-container { padding: 0.8rem; }
+            .trust-bar { display: none; }
+            .settings-sidebar { position: static; padding: 0.6rem; }
+            .form-grid { grid-template-columns: 1fr; gap: 0.8rem; }
+            .profile-avatar { width: 50px; height: 50px; font-size: 1.2rem; }
+            .theme-selector { flex-direction: column; }
+            .flag-icon { width: 24px; height: 24px; }
         }
     </style>
 </head>
@@ -719,7 +503,8 @@
             <a href="support.html">Support</a>
         </div>
         <div class="right-menu">
-            <img src="https://flagcdn.com/w320/us.png" alt="USD" class="flag-icon">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
+            <img src="https://flagcdn.com/w320/us.png" alt="USD" class="flag-icon" onclick="showToast('Currency: USD')">
             <button class="hamburger-btn" onclick="openSidebar()">☰</button>
         </div>
     </nav>
@@ -727,20 +512,24 @@
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()">
         <div class="sidebar-menu" onclick="event.stopPropagation()">
             <div class="sidebar-header">
-                <div class="logo">
-                    <div class="logo-icon">⛰️</div>
-                    <div class="logo-text">BluepeakCapital</div>
+                <div class="avatar-large" id="sidebarAvatar">U</div>
+                <div class="user-info">
+                    <span class="user-name" id="sidebarName">Loading…</span>
+                    <span class="user-email" id="sidebarEmail">…</span>
                 </div>
             </div>
-            <a href="dashboard.html">Dashboard</a>
-            <a href="trade.html">Trade</a>
-            <a href="markets.html">Markets</a>
-            <a href="orders.html">Orders</a>
-            <a href="bots.html">Bots</a>
-            <a href="deposit.html">Deposit</a>
-            <a href="withdraw.html">Withdraw</a>
-            <a href="settings.html">Settings</a>
-            <a href="support.html">Support</a>
+            <div class="sidebar-nav">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="trade.html">Trade</a>
+                <a href="markets.html">Markets</a>
+                <a href="orders.html">Orders</a>
+                <a href="bots.html">Bots</a>
+                <a href="deposit.html">Deposit</a>
+                <a href="withdraw.html">Withdraw</a>
+                <a href="settings.html">Settings</a>
+                <a href="support.html">Support</a>
+                <a href="#" class="logout-item" onclick="logout(); return false;">Logout</a>
+            </div>
         </div>
     </div>
 
@@ -760,16 +549,11 @@
             <p>Manage your account preferences and security</p>
         </div>
 
-        <!-- Theme Selector - VISIBLE AT TOP -->
         <div class="theme-card">
             <div class="theme-title">🎨 Appearance</div>
             <div class="theme-selector">
-                <button class="theme-btn" id="themeDarkBtn" onclick="setTheme('dark')">
-                    🌙 Dark Mode
-                </button>
-                <button class="theme-btn" id="themeLightBtn" onclick="setTheme('light')">
-                    ☀️ Light Mode
-                </button>
+                <button class="theme-btn" id="themeDarkBtn" onclick="setTheme('dark')">🌙 Dark Mode</button>
+                <button class="theme-btn" id="themeLightBtn" onclick="setTheme('light')">☀️ Light Mode</button>
             </div>
             <p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.5rem;">
                 Your theme preference is saved and applied across all pages.
@@ -783,19 +567,19 @@
                     <div class="profile-name" id="profileName">User</div>
                     <div class="profile-email" id="profileEmail">user@example.com</div>
                 </div>
-                <ul class="sidebar-menu">
-                    <li><a href="#" class="active" onclick="switchSection('profile')">Profile</a></li>
-                    <li><a href="#" onclick="switchSection('security')">Security & 2FA</a></li>
-                    <li><a href="#" onclick="switchSection('api')">API Keys</a></li>
-                    <li><a href="#" onclick="switchSection('devices')">Devices</a></li>
-                    <li><a href="#" onclick="switchSection('notifications')">Notifications</a></li>
-                    <li><a href="#" onclick="switchSection('billing')">Billing & Limits</a></li>
-                    <li><a href="#" onclick="switchSection('kyc')">Verification</a></li>
+                <ul class="settings-nav">
+                    <li><a class="active" onclick="switchSection('profile', this)">Profile</a></li>
+                    <li><a onclick="switchSection('security', this)">Security & 2FA</a></li>
+                    <li><a onclick="switchSection('api', this)">API Keys</a></li>
+                    <li><a onclick="switchSection('devices', this)">Devices</a></li>
+                    <li><a onclick="switchSection('notifications', this)">Notifications</a></li>
+                    <li><a onclick="switchSection('billing', this)">Billing & Limits</a></li>
+                    <li><a onclick="switchSection('kyc', this)">Verification</a></li>
                 </ul>
             </aside>
 
             <div class="settings-content">
-                <!-- Profile Section -->
+                <!-- Profile -->
                 <div id="profileSection" class="section">
                     <h2 class="section-title">Profile Information</h2>
                     <div class="form-grid">
@@ -818,7 +602,7 @@
                         <div class="form-group">
                             <label>Country</label>
                             <select id="country">
-                                <option value="US" selected>United States</option>
+                                <option value="US">United States</option>
                                 <option value="GB">United Kingdom</option>
                                 <option value="CA">Canada</option>
                                 <option value="AU">Australia</option>
@@ -826,30 +610,34 @@
                                 <option value="FR">France</option>
                                 <option value="JP">Japan</option>
                                 <option value="SG">Singapore</option>
+                                <option value="KE">Kenya</option>
+                                <option value="NG">Nigeria</option>
+                                <option value="ZA">South Africa</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Time Zone</label>
                             <select id="timezone">
-                                <option>EST (UTC -5)</option>
-                                <option>GMT (UTC +0)</option>
-                                <option>SGT (UTC +8)</option>
+                                <option value="EST (UTC -5)">EST (UTC -5)</option>
+                                <option value="GMT (UTC +0)">GMT (UTC +0)</option>
+                                <option value="EAT (UTC +3)">EAT (UTC +3)</option>
+                                <option value="SGT (UTC +8)">SGT (UTC +8)</option>
                             </select>
                         </div>
                     </div>
-                    <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+                    <button class="btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Changes</button>
                 </div>
 
-                <!-- Security Section -->
+                <!-- Security -->
                 <div id="securitySection" class="section" style="display: none;">
                     <h2 class="section-title">Security & 2FA</h2>
-                    
+
                     <div class="twofa-status">
                         <span>Two-Factor Authentication</span>
                         <span class="twofa-disabled">Disabled</span>
                     </div>
-                    <button class="btn-primary" onclick="alert('2FA setup coming soon')">Enable 2FA</button>
-                    
+                    <button class="btn-primary" onclick="showToast('2FA setup coming soon')">Enable 2FA</button>
+
                     <div style="margin-top: 1.2rem;">
                         <h3 style="font-size: 0.85rem; margin-bottom: 0.8rem; color: var(--text-primary);">Change Password</h3>
                         <div class="form-group">
@@ -858,149 +646,334 @@
                         </div>
                         <div class="form-group">
                             <label>New Password</label>
-                            <input type="password" id="newPassword" placeholder="Enter new password">
+                            <input type="password" id="newPassword" placeholder="Enter new password (min 8 chars)">
                         </div>
                         <div class="form-group">
                             <label>Confirm Password</label>
                             <input type="password" id="confirmPassword" placeholder="Confirm new password">
                         </div>
-                        <button class="btn-primary" onclick="updatePassword()">Update Password</button>
+                        <button class="btn-primary" id="updatePasswordBtn" onclick="updatePassword()">Update Password</button>
                     </div>
                 </div>
 
-                <!-- API Keys Section -->
+                <!-- API Keys -->
                 <div id="apiSection" class="section" style="display: none;">
                     <h2 class="section-title">API Keys</h2>
-                    <button class="btn-primary" style="margin-bottom: 0.8rem;" onclick="alert('Create API key coming soon')">+ New API Key</button>
-                    
+                    <button class="btn-primary" style="margin-bottom: 0.8rem;" onclick="showToast('Create API key coming soon')">+ New API Key</button>
+
                     <div class="api-key-item">
-                        <div class="api-key-info">
+                        <div>
                             <div class="api-key-name">Trading Bot Key</div>
                             <div class="api-key-perms">Trade, Read</div>
                             <div style="font-size: 0.6rem; color: var(--text-secondary);">Created: Jan 15, 2024</div>
                         </div>
-                        <button class="btn-outline" onclick="alert('Revoke key')">Revoke</button>
+                        <button class="btn-outline" onclick="showToast('Revoke coming soon')">Revoke</button>
                     </div>
-                    
+
                     <div class="api-key-item">
-                        <div class="api-key-info">
+                        <div>
                             <div class="api-key-name">Portfolio Tracker</div>
                             <div class="api-key-perms">Read only</div>
                             <div style="font-size: 0.6rem; color: var(--text-secondary);">Created: Jan 10, 2024</div>
                         </div>
-                        <button class="btn-outline" onclick="alert('Revoke key')">Revoke</button>
+                        <button class="btn-outline" onclick="showToast('Revoke coming soon')">Revoke</button>
                     </div>
                 </div>
 
-                <!-- Connected Devices Section -->
+                <!-- Devices -->
                 <div id="devicesSection" class="section" style="display: none;">
                     <h2 class="section-title">Connected Devices</h2>
-                    
+
                     <div class="device-item device-current">
-                        <div class="device-info">
-                            <div class="device-name">Chrome on Windows</div>
-                            <div class="device-details">New York • Current</div>
+                        <div>
+                            <div class="device-name">This Browser</div>
+                            <div class="device-details">Current session</div>
                         </div>
                         <span style="font-size: 0.6rem; color: #10b981;">Current</span>
                     </div>
-                    
-                    <div class="device-item">
-                        <div class="device-info">
-                            <div class="device-name">Safari on iPhone</div>
-                            <div class="device-details">New York • 2 hours ago</div>
-                        </div>
-                        <button class="btn-outline" onclick="alert('Device removed')">Remove</button>
-                    </div>
-                    
-                    <button class="btn-danger" style="margin-top: 0.8rem;" onclick="alert('All devices logged out')">Log Out All Devices</button>
+
+                    <button class="btn-danger" style="margin-top: 0.8rem;" onclick="logout()">Log Out of This Device</button>
                 </div>
 
-                <!-- Notifications Section -->
+                <!-- Notifications -->
                 <div id="notificationsSection" class="section" style="display: none;">
                     <h2 class="section-title">Notification Preferences</h2>
-                    
+
                     <div class="twofa-status">
                         <span>Email Notifications</span>
-                        <button class="btn-outline" onclick="alert('Email preferences saved')">Configure</button>
+                        <button class="btn-outline" onclick="showToast('Email preferences saved')">Configure</button>
                     </div>
-                    
                     <div class="twofa-status">
                         <span>Push Notifications</span>
-                        <button class="btn-outline" onclick="alert('Push preferences saved')">Configure</button>
+                        <button class="btn-outline" onclick="showToast('Push preferences saved')">Configure</button>
                     </div>
-                    
                     <div class="twofa-status">
                         <span>SMS Alerts</span>
-                        <button class="btn-outline" onclick="alert('SMS preferences saved')">Configure</button>
+                        <button class="btn-outline" onclick="showToast('SMS preferences saved')">Configure</button>
                     </div>
                 </div>
 
-                <!-- Billing Section -->
+                <!-- Billing -->
                 <div id="billingSection" class="section" style="display: none;">
                     <h2 class="section-title">Billing & Limits</h2>
-                    
+
                     <div class="kyc-card">
                         <div style="font-size: 0.7rem; color: var(--text-secondary);">Daily Trading Limit</div>
-                        <div style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">$50,000</div>
-                        <div style="font-size: 0.6rem; color: var(--text-secondary);">Remaining: $37,550</div>
+                        <div style="font-size: 1.2rem; font-weight: 700;">$50,000</div>
+                        <div style="font-size: 0.6rem; color: var(--text-secondary);">Remaining: $50,000</div>
                     </div>
-                    
+
                     <div class="kyc-card">
                         <div style="font-size: 0.7rem; color: var(--text-secondary);">Withdrawal Limit</div>
-                        <div style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">$25,000</div>
-                        <div style="font-size: 0.6rem; color: var(--text-secondary);">Remaining: $18,750</div>
+                        <div style="font-size: 1.2rem; font-weight: 700;">$25,000</div>
+                        <div style="font-size: 0.6rem; color: var(--text-secondary);">Remaining: $25,000</div>
                     </div>
-                    
+
                     <div class="form-group">
-                        <label>Default Fee Tier</label>
-                        <select>
-                            <option>Maker: 0.02% | Taker: 0.05%</option>
-                            <option>Volume Tier 1 (Current)</option>
+                        <label>Fee Tier</label>
+                        <select disabled>
+                            <option>Maker: 0.02% | Taker: 0.05% (Standard)</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- KYC Section -->
+                <!-- KYC -->
                 <div id="kycSection" class="section" style="display: none;">
                     <h2 class="section-title">Verification (KYC)</h2>
-                    
+
                     <div class="kyc-card">
                         <div style="font-size: 0.75rem; color: var(--text-secondary);">Current Status</div>
-                        <div class="kyc-status kyc-verified">Verified</div>
-                        <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-secondary);">Full access to all features</div>
+                        <div class="kyc-status kyc-pending" id="kycStatus">Not Started</div>
+                        <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-secondary);">Complete KYC to unlock full access</div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label>Full Legal Name</label>
-                        <input type="text" id="legalName" value="John Michael Doe" disabled>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Date of Birth</label>
-                        <input type="text" id="dob" value="1990-05-15" disabled>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Address</label>
-                        <input type="text" id="address" value="123 Wall Street, New York, NY" disabled>
-                    </div>
-                    
-                    <button class="btn-outline" onclick="alert('KYC upgrade submitted')">Upgrade to Institutional</button>
+
+                    <button class="btn-primary" onclick="showToast('KYC flow coming soon')">Start Verification</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        function switchSection(section) {
-            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-            document.getElementById(`${section}Section`).style.display = 'block';
-            document.querySelectorAll('.sidebar-menu a').forEach(link => link.classList.remove('active'));
-            event.target.classList.add('active');
+        // ===== Supabase Init (matches every other page) =====
+        const SUPABASE_URL = 'https://xdwjjfvyowveqcziwssv.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_nd0hfyx5B3XmUaX1nvtu3w_NvZQU5k8';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+
+        // ===== Auth + load =====
+        async function loadUserProfile() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = 'login.html'; return; }
+            currentUser = session.user;
+
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .maybeSingle();
+
+            if (error) console.warn('profile fetch:', error.message);
+
+            const fullName = profile?.full_name
+                || currentUser.user_metadata?.full_name
+                || currentUser.email?.split('@')[0]
+                || 'User';
+
+            const parts = fullName.split(' ');
+            const firstName = parts[0] || fullName;
+            const lastName = parts.slice(1).join(' ') || '';
+
+            updateSidebarUser({
+                full_name: fullName,
+                email: currentUser.email
+            });
+
+            document.getElementById('profileAvatar').textContent = initials(fullName);
+            document.getElementById('profileName').textContent = fullName;
+            document.getElementById('profileEmail').textContent = currentUser.email;
+
+            document.getElementById('firstName').value = firstName;
+            document.getElementById('lastName').value = lastName;
+            document.getElementById('email').value = currentUser.email;
+            document.getElementById('phone').value = profile?.phone || '';
+            document.getElementById('country').value = profile?.country || 'US';
+            document.getElementById('timezone').value = profile?.timezone || 'EST (UTC -5)';
         }
 
-        function openSidebar() { document.getElementById('sidebarOverlay').classList.add('active'); }
-        function closeSidebar() { document.getElementById('sidebarOverlay').classList.remove('active'); }
+        function initials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'U';
+        }
+
+        function updateSidebarUser(user) {
+            const fullName = user.full_name || 'User';
+            document.getElementById('sidebarName').textContent = fullName;
+            document.getElementById('sidebarEmail').textContent = user.email || '';
+            document.getElementById('sidebarAvatar').textContent = initials(fullName);
+        }
+
+        // ===== Save profile =====
+        window.saveProfile = async function () {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const country = document.getElementById('country').value;
+            const timezone = document.getElementById('timezone').value;
+
+            if (!firstName) return showToast('First name is required');
+
+            const fullName = `${firstName} ${lastName}`.trim();
+            const btn = document.getElementById('saveProfileBtn');
+            const orig = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+
+            try {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({
+                        full_name: fullName,
+                        phone: phone,
+                        country: country,
+                        timezone: timezone,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', currentUser.id);
+
+                if (error) {
+                    showToast(error.message, 'error');
+                    return;
+                }
+
+                document.getElementById('profileAvatar').textContent = initials(fullName);
+                document.getElementById('profileName').textContent = fullName;
+                updateSidebarUser({ full_name: fullName, email: currentUser.email });
+                showToast('Profile updated');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = orig;
+            }
+        };
+
+        // ===== Update password (verifies current password first) =====
+        window.updatePassword = async function () {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                return showToast('Please fill in all password fields');
+            }
+            if (newPassword.length < 8) {
+                return showToast('New password must be at least 8 characters');
+            }
+            if (newPassword !== confirmPassword) {
+                return showToast('New passwords do not match');
+            }
+
+            const btn = document.getElementById('updatePasswordBtn');
+            const orig = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Verifying…';
+
+            try {
+                // Re-authenticate to verify current password
+                const { error: verifyError } = await supabase.auth.signInWithPassword({
+                    email: currentUser.email,
+                    password: currentPassword
+                });
+
+                if (verifyError) {
+                    showToast('Current password is incorrect', 'error');
+                    return;
+                }
+
+                btn.textContent = 'Updating…';
+
+                const { error } = await supabase.auth.updateUser({ password: newPassword });
+                if (error) {
+                    showToast(error.message, 'error');
+                    return;
+                }
+
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                showToast('Password updated');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = orig;
+            }
+        };
+
+        // ===== Sections (FIXED: btn passed explicitly) =====
+        window.switchSection = function (section, btn) {
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+            document.getElementById(`${section}Section`).style.display = 'block';
+            document.querySelectorAll('.settings-nav a').forEach(a => a.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+        };
+
+        // ===== Theme =====
+        function updateThemeButtonsUI(theme) {
+            const darkBtn = document.getElementById('themeDarkBtn');
+            const lightBtn = document.getElementById('themeLightBtn');
+            if (!darkBtn || !lightBtn) return;
+            if (theme === 'dark') {
+                darkBtn.classList.add('active');
+                lightBtn.classList.remove('active');
+            } else {
+                lightBtn.classList.add('active');
+                darkBtn.classList.remove('active');
+            }
+        }
+
+        window.setTheme = function (theme) {
+            localStorage.setItem('bluepeak_theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeButtonsUI(theme);
+            updateThemeBtn();
+            showToast(theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode');
+        };
+
+        window.toggleTheme = function () {
+            const cur = document.documentElement.getAttribute('data-theme');
+            setTheme(cur === 'light' ? 'dark' : 'light');
+        };
+
+        function updateThemeBtn() {
+            const btn = document.getElementById('themeToggleBtn');
+            if (!btn) return;
+            btn.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙';
+        }
+
+        // ===== Sidebar =====
+        window.openSidebar = () => document.getElementById('sidebarOverlay').classList.add('active');
+        window.closeSidebar = () => document.getElementById('sidebarOverlay').classList.remove('active');
+
+        window.logout = async function () {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        };
+
+        // ===== Toast =====
+        function showToast(msg, type) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            if (type === 'error') t.style.background = '#ef4444';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
+
+        // ===== Boot =====
+        (async () => {
+            updateThemeBtn();
+            updateThemeButtonsUI(document.documentElement.getAttribute('data-theme'));
+            await loadUserProfile();
+        })();
     </script>
 </body>
 </html>
