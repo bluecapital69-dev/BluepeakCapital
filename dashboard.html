@@ -11,7 +11,7 @@
     
     <!-- THEME CONTROLLER - MUST BE FIRST -->
     <script>
-        function initTheme() {
+        (function initTheme() {
             const savedTheme = localStorage.getItem('bluepeak_theme');
             if (savedTheme === 'light') {
                 document.documentElement.setAttribute('data-theme', 'light');
@@ -19,201 +19,7 @@
                 document.documentElement.setAttribute('data-theme', 'dark');
                 localStorage.setItem('bluepeak_theme', 'dark');
             }
-        }
-        initTheme();
-    </script>
-    
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-
-        // UPDATED: Your new Supabase credentials
-        const supabaseUrl = 'https://nlrrnqzbotfnmltpaxvw.supabase.co'
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5scnJucXpib3Rmbm1sdHBheHZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MTI0NjYsImV4cCI6MjEwNDA4ODQ2Nn0.PphFiwnKxHJhrqq0lPo336eUEVCBZNxXmmq3usSQj9I'
-        
-        const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-        let currentUser = null;
-
-        async function checkAuthAndLoadUser() {
-            const { data: { session } } = await supabase.auth.getSession()
-            
-            if (!session) {
-                window.location.href = 'login.html'
-                return
-            }
-            
-            currentUser = session.user
-            
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single()
-            
-            if (error) {
-                console.error('Error fetching profile:', error)
-                updateUserDisplay({
-                    full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-                    email: session.user.email
-                })
-            } else if (profile) {
-                updateUserDisplay(profile)
-            }
-            
-            await loadUserBalances(session.user.id)
-        }
-        
-        function updateUserDisplay(user) {
-            const fullName = user.full_name || user.email?.split('@')[0] || 'User'
-            const firstName = fullName.split(' ')[0]
-            
-            const welcomeH1 = document.querySelector('.welcome-section h1')
-            if (welcomeH1) {
-                welcomeH1.textContent = `Welcome back, ${firstName}`
-            }
-            
-            const sidebarName = document.getElementById('sidebarName')
-            const sidebarEmail = document.getElementById('sidebarEmail')
-            const sidebarAvatar = document.getElementById('sidebarAvatar')
-            if (sidebarName) sidebarName.textContent = fullName
-            if (sidebarEmail) sidebarEmail.textContent = user.email || 'user@example.com'
-            if (sidebarAvatar) {
-                const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-                sidebarAvatar.textContent = initials
-            }
-        }
-        
-        async function loadUserBalances(userId) {
-            try {
-                const { data: balances, error } = await supabase
-                    .from('user_balances')
-                    .select('*')
-                    .eq('user_id', userId)
-                
-                if (error) {
-                    console.error('Error loading balances:', error)
-                    useEmptyPortfolio()
-                    return
-                }
-                
-                if (balances && balances.length > 0) {
-                    updatePortfolioWithBalances(balances)
-                } else {
-                    await createDefaultBalances(userId)
-                    useEmptyPortfolio()
-                }
-            } catch (err) {
-                console.error('Error:', err)
-                useEmptyPortfolio()
-            }
-        }
-        
-        async function createDefaultBalances(userId) {
-            const defaultBalances = [
-                { user_id: userId, asset: "BTC", balance: 0 },
-                { user_id: userId, asset: "ETH", balance: 0 },
-                { user_id: userId, asset: "SOL", balance: 0 },
-                { user_id: userId, asset: "AVAX", balance: 0 },
-                { user_id: userId, asset: "USD", balance: 0 }
-            ]
-            
-            try {
-                const { error } = await supabase
-                    .from('user_balances')
-                    .insert(defaultBalances)
-                
-                if (error) {
-                    console.error('Error creating default balances:', error)
-                }
-            } catch (err) {
-                console.error('Error:', err)
-            }
-        }
-        
-        function useEmptyPortfolio() {
-            const portfolioData = [
-                { asset: "Bitcoin", symbol: "BTC", holdings: 0, avgPrice: 0, currentPrice: 43250, value: 0, pnl: 0, pnlPercent: 0 },
-                { asset: "Ethereum", symbol: "ETH", holdings: 0, avgPrice: 0, currentPrice: 2250, value: 0, pnl: 0, pnlPercent: 0 },
-                { asset: "Solana", symbol: "SOL", holdings: 0, avgPrice: 0, currentPrice: 95.50, value: 0, pnl: 0, pnlPercent: 0 },
-                { asset: "Avalanche", symbol: "AVAX", holdings: 0, avgPrice: 0, currentPrice: 38.20, value: 0, pnl: 0, pnlPercent: 0 }
-            ]
-            
-            updatePortfolioTable(portfolioData)
-            updateBalanceDisplay(0)
-        }
-        
-        function updatePortfolioWithBalances(balances) {
-            const usdBalance = balances.find(b => b.asset === 'USD')?.balance || 0
-            updateBalanceDisplay(usdBalance)
-            
-            const portfolioData = [
-                { asset: "Bitcoin", symbol: "BTC", holdings: 0, avgPrice: 38500, currentPrice: 43250, value: 0, pnl: 0, pnlPercent: 0 },
-                { asset: "Ethereum", symbol: "ETH", holdings: 0, avgPrice: 1850, currentPrice: 2250, value: 0, pnl: 0, pnlPercent: 0 },
-                { asset: "Solana", symbol: "SOL", holdings: 0, avgPrice: 85, currentPrice: 95.50, value: 0, pnl: 0, pnlPercent: 0 },
-                { asset: "Avalanche", symbol: "AVAX", holdings: 0, avgPrice: 32, currentPrice: 38.20, value: 0, pnl: 0, pnlPercent: 0 }
-            ]
-            
-            balances.forEach(balance => {
-                const found = portfolioData.find(p => p.symbol === balance.asset)
-                if (found) {
-                    found.holdings = balance.balance || 0
-                    found.value = found.holdings * found.currentPrice
-                    found.pnl = found.value - (found.holdings * found.avgPrice)
-                    found.pnlPercent = found.holdings > 0 ? ((found.currentPrice - found.avgPrice) / found.avgPrice * 100).toFixed(1) : 0
-                }
-            })
-            
-            updatePortfolioTable(portfolioData)
-            const totalCryptoValue = portfolioData.reduce((sum, a) => sum + a.value, 0)
-            document.getElementById('totalBalance').innerHTML = `$${(usdBalance + totalCryptoValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        }
-        
-        function updatePortfolioTable(portfolioData) {
-            const tbody = document.getElementById('portfolioBody')
-            if (!tbody) return
-            
-            tbody.innerHTML = portfolioData.map(asset => `
-                <tr>
-                    <td><strong>${asset.asset}</strong> ${asset.symbol}</td>
-                    <td>${asset.holdings} ${asset.symbol}</td>
-                    <td>$${asset.avgPrice.toLocaleString()}</td>
-                    <td>$${asset.currentPrice.toLocaleString()}</td>
-                    <td>$${asset.value.toLocaleString()}</td>
-                    <td class="${asset.pnl >= 0 ? 'positive' : 'negative'}">
-                        ${asset.pnl >= 0 ? '▲' : '▼'} $${Math.abs(asset.pnl).toLocaleString()} (${Math.abs(asset.pnlPercent)}%)
-                    </td>
-                    <td><button class="btn-small" onclick="window.location.href='trade.html'">Trade</button></td>
-                </tr>
-            `).join('')
-        }
-        
-        function updateBalanceDisplay(amount) {
-            const balanceDisplay = document.getElementById('balanceDisplay')
-            const totalBalanceElem = document.getElementById('totalBalance')
-            if (balanceDisplay) {
-                balanceDisplay.innerHTML = `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            }
-            if (totalBalanceElem) {
-                // Will be updated by updatePortfolioWithBalances
-            }
-        }
-        
-        window.logout = async function() {
-            const { error } = await supabase.auth.signOut()
-            if (!error) {
-                localStorage.removeItem('user')
-                localStorage.removeItem('session')
-                window.location.href = 'index.html'
-            } else {
-                showMessage('Error logging out')
-            }
-        }
-        
-        function showMessage(msg) {
-            alert(msg)
-        }
-        
-        checkAuthAndLoadUser()
+        })();
     </script>
     
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -227,13 +33,8 @@
     </script>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* Dark Mode as Default */
         :root {
             --bg-primary: #0a0e17;
             --bg-secondary: #111827;
@@ -246,7 +47,6 @@
             --hover-bg: #374151;
         }
 
-        /* Light Mode */
         [data-theme="light"] {
             --bg-primary: #f5f7fb;
             --bg-secondary: #ffffff;
@@ -316,6 +116,20 @@
             gap: 0.75rem;
         }
 
+        .theme-toggle {
+            background: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
         .flag-icon {
             width: 28px;
             height: 28px;
@@ -346,10 +160,6 @@
             justify-content: center;
         }
 
-        .nav-links {
-            display: none;
-        }
-
         .sidebar-overlay {
             position: fixed;
             top: 0;
@@ -363,10 +173,7 @@
             transition: all 0.3s ease;
         }
 
-        .sidebar-overlay.active {
-            visibility: visible;
-            opacity: 1;
-        }
+        .sidebar-overlay.active { visibility: visible; opacity: 1; }
 
         .sidebar-menu {
             position: fixed;
@@ -382,9 +189,7 @@
             flex-direction: column;
         }
 
-        .sidebar-overlay.active .sidebar-menu {
-            right: 0;
-        }
+        .sidebar-overlay.active .sidebar-menu { right: 0; }
 
         .sidebar-header {
             padding: 1.5rem;
@@ -407,20 +212,14 @@
             font-size: 1.2rem;
         }
 
-        .sidebar-header .user-info {
-            display: flex;
-            flex-direction: column;
-        }
-
+        .sidebar-header .user-info { display: flex; flex-direction: column; overflow: hidden; }
         .sidebar-header .user-name {
-            font-weight: 600;
-            font-size: 1rem;
-            color: var(--text-primary);
+            font-weight: 600; font-size: 1rem; color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
         .sidebar-header .user-email {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
+            font-size: 0.7rem; color: var(--text-secondary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
         .close-sidebar {
@@ -437,6 +236,7 @@
             display: flex;
             flex-direction: column;
             padding: 0.5rem 0;
+            overflow-y: auto;
         }
 
         .sidebar-nav a {
@@ -448,22 +248,15 @@
             font-weight: 500;
         }
 
-        .sidebar-nav a:hover {
-            background: var(--hover-bg);
-            color: #3b82f6;
-        }
+        .sidebar-nav a:hover { background: var(--hover-bg); color: #3b82f6; }
 
         .sidebar-nav .logout-item {
             margin-top: auto;
             border-top: 1px solid var(--border-color);
-            margin-top: 1rem;
             color: #ef4444;
         }
 
-        .sidebar-nav .logout-item:hover {
-            background: #fef2f2;
-            color: #dc2626;
-        }
+        .sidebar-nav .logout-item:hover { background: rgba(239,68,68,0.1); color: #dc2626; }
 
         .trust-bar {
             background: var(--bg-secondary);
@@ -480,8 +273,7 @@
         .main-container {
             padding: 1.5rem;
             max-width: 1600px;
-            margin-left: auto;
-            margin-right: auto;
+            margin: 0 auto;
             width: 100%;
         }
 
@@ -493,10 +285,7 @@
             margin-bottom: 1.5rem;
         }
 
-        .welcome-section h1 {
-            font-size: 1.5rem;
-            margin-bottom: 0.25rem;
-        }
+        .welcome-section h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
 
         .stats-grid {
             display: grid;
@@ -520,11 +309,8 @@
             margin-bottom: 0.5rem;
         }
 
-        .stat-value {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
+        .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--text-primary); }
+        .stat-change { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; }
 
         .positive { color: #10b981; }
         .negative { color: #ef4444; }
@@ -541,6 +327,7 @@
             border-radius: 16px;
             border: 1px solid var(--border-color);
             overflow: hidden;
+            margin-bottom: 1.5rem;
         }
 
         .chart-header, .orderbook-header, .alerts-header, .news-header {
@@ -565,15 +352,9 @@
             color: var(--text-primary);
         }
 
-        #tradingview_chart {
-            height: 400px;
-            width: 100%;
-        }
+        #tradingview_chart { height: 400px; width: 100%; }
 
-        .orderbook-table {
-            width: 100%;
-            font-size: 0.8rem;
-        }
+        .orderbook-table { width: 100%; font-size: 0.8rem; }
 
         .orderbook-table th, .orderbook-table td {
             padding: 0.5rem 1rem;
@@ -615,9 +396,7 @@
             cursor: pointer;
         }
 
-        .alert-list {
-            padding: 0 1rem 1rem;
-        }
+        .alert-list { padding: 0 1rem 1rem; }
 
         .alert-item {
             display: flex;
@@ -639,11 +418,7 @@
             font-size: 0.7rem;
         }
 
-        .portfolio-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
+        .portfolio-table { width: 100%; border-collapse: collapse; min-width: 600px; }
 
         .portfolio-table th {
             text-align: left;
@@ -661,6 +436,8 @@
             font-size: 0.85rem;
             color: var(--text-primary);
         }
+
+        .portfolio-container { overflow-x: auto; }
 
         .mobile-app-section {
             background: linear-gradient(135deg, #1a1f36, #0f172a);
@@ -684,12 +461,10 @@
             font-size: 0.8rem;
             color: #1a1f36;
             text-align: center;
+            padding: 0.5rem;
         }
 
-        .app-buttons {
-            display: flex;
-            gap: 1rem;
-        }
+        .app-buttons { display: flex; gap: 1rem; }
 
         .app-btn {
             background: rgba(255,255,255,0.1);
@@ -707,9 +482,7 @@
             transition: background 0.2s;
         }
 
-        .news-item:hover {
-            background: var(--hover-bg);
-        }
+        .news-item:hover { background: var(--hover-bg); }
 
         .news-title {
             font-weight: 600;
@@ -718,10 +491,7 @@
             color: var(--text-primary);
         }
 
-        .news-time {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-        }
+        .news-time { font-size: 0.7rem; color: var(--text-secondary); }
 
         .btn-small {
             background: #3b82f6;
@@ -734,69 +504,27 @@
         }
 
         @media (max-width: 1024px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
+            .dashboard-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 768px) {
-            .trust-bar {
-                display: none;
-            }
-            .main-container {
-                padding: 1rem;
-                margin-top: 60px;
-            }
-            .welcome-section {
-                padding: 1rem;
-            }
-            .welcome-section h1 {
-                font-size: 1.2rem;
-            }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.75rem;
-            }
-            .stat-card {
-                padding: 0.75rem;
-            }
-            .stat-value {
-                font-size: 1.1rem;
-            }
-            .stat-label {
-                font-size: 0.55rem;
-            }
-            #tradingview_chart {
-                height: 280px;
-            }
-            .alert-form {
-                flex-direction: column;
-            }
-            .alert-form select, .alert-form input, .alert-form button {
-                width: 100%;
-            }
-            .portfolio-table {
-                min-width: 550px;
-            }
-            .mobile-app-section {
-                flex-direction: column;
-                text-align: center;
-            }
-            .app-buttons {
-                justify-content: center;
-            }
-            .qr-code {
-                width: 70px;
-                height: 70px;
-            }
-            .balance-display {
-                font-size: 0.7rem;
-                padding: 0.3rem 0.7rem;
-            }
-            .flag-icon {
-                width: 24px;
-                height: 24px;
-            }
+            .trust-bar { display: none; }
+            .main-container { padding: 1rem; margin-top: 60px; }
+            .welcome-section { padding: 1rem; }
+            .welcome-section h1 { font-size: 1.2rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+            .stat-card { padding: 0.75rem; }
+            .stat-value { font-size: 1.1rem; }
+            .stat-label { font-size: 0.55rem; }
+            #tradingview_chart { height: 280px; }
+            .alert-form { flex-direction: column; }
+            .alert-form select, .alert-form input, .alert-form button { width: 100%; }
+            .portfolio-table { min-width: 550px; }
+            .mobile-app-section { flex-direction: column; text-align: center; }
+            .app-buttons { justify-content: center; }
+            .qr-code { width: 70px; height: 70px; }
+            .balance-display { font-size: 0.7rem; padding: 0.3rem 0.7rem; }
+            .flag-icon { width: 24px; height: 24px; }
         }
     </style>
 </head>
@@ -808,6 +536,7 @@
         </div>
 
         <div class="right-menu">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="themeToggleBtn">🌙</button>
             <img src="https://flagcdn.com/w320/us.png" alt="USD" class="flag-icon" onclick="showMessage('Currency: USD')">
             <div class="balance-display" id="balanceDisplay">$0.00</div>
             <button class="mobile-menu-btn" onclick="openSidebar()">☰</button>
@@ -819,13 +548,13 @@
             <div class="sidebar-header">
                 <div class="avatar-large" id="sidebarAvatar">U</div>
                 <div class="user-info">
-                    <span class="user-name" id="sidebarName">User</span>
-                    <span class="user-email" id="sidebarEmail">user@example.com</span>
+                    <span class="user-name" id="sidebarName">Loading…</span>
+                    <span class="user-email" id="sidebarEmail">…</span>
                 </div>
                 <button class="close-sidebar" onclick="closeSidebar()">✕</button>
             </div>
             <div class="sidebar-nav">
-                <a href="#" onclick="closeSidebar()">Dashboard</a>
+                <a href="dashboard.html" onclick="closeSidebar()">Dashboard</a>
                 <a href="trade.html" onclick="closeSidebar()">Trade</a>
                 <a href="markets.html" onclick="closeSidebar()">Markets</a>
                 <a href="orders.html" onclick="closeSidebar()">Orders</a>
@@ -834,26 +563,22 @@
                 <a href="withdraw.html" onclick="closeSidebar()">Withdraw</a>
                 <a href="settings.html" onclick="closeSidebar()">Settings</a>
                 <a href="support.html" onclick="closeSidebar()">Support</a>
-                <a href="#" class="logout-item" onclick="logout(); closeSidebar();">Logout</a>
+                <a href="#" class="logout-item" onclick="logout(); closeSidebar(); return false;">Logout</a>
             </div>
         </div>
     </div>
 
     <div class="trust-bar">
-        <span>FINRA Member</span>
-        <span>|</span>
-        <span>SIPC Insured</span>
-        <span>|</span>
-        <span>SOC 2 Type II</span>
-        <span>|</span>
-        <span>$500M Insurance</span>
-        <span>|</span>
+        <span>FINRA Member</span><span>|</span>
+        <span>SIPC Insured</span><span>|</span>
+        <span>SOC 2 Type II</span><span>|</span>
+        <span>$500M Insurance</span><span>|</span>
         <span>24/7 Support</span>
     </div>
 
     <div class="main-container">
         <div class="welcome-section">
-            <h1>Welcome back, User</h1>
+            <h1 id="welcomeHeading">Welcome back</h1>
             <p>Deposit funds to start trading</p>
         </div>
 
@@ -909,7 +634,7 @@
         <div class="alerts-section">
             <div class="alerts-header">
                 <h3>Price Alerts</h3>
-                <span>Get notified when price hits your target</span>
+                <span style="font-size:0.75rem;color:var(--text-secondary);">Get notified when price hits your target</span>
             </div>
             <div class="alert-form">
                 <select id="alertCoin">
@@ -934,7 +659,7 @@
                     <tr><th>Asset</th><th>Holdings</th><th>Avg. Price</th><th>Current Price</th><th>Value</th><th>P&L</th><th></th></tr>
                 </thead>
                 <tbody id="portfolioBody">
-                    <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading portfolio...</td></tr>
+                    <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading portfolio…</td></tr>
                 </tbody>
             </table>
         </div>
@@ -948,25 +673,238 @@
                     <button class="app-btn" onclick="showMessage('Google Play coming soon')">Google Play</button>
                 </div>
             </div>
-            <div class="qr-code">
-                Scan to download
-            </div>
+            <div class="qr-code">Scan to download</div>
         </div>
 
         <div class="news-section">
-            <div class="news-header">
-                <h3>Latest Crypto News</h3>
-            </div>
+            <div class="news-header"><h3>Latest Crypto News</h3></div>
             <div id="newsFeed"></div>
         </div>
     </div>
 
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        let tvWidget = null;
+        // ===== Supabase Init (matches index.html / signup.html / login.html) =====
+        const SUPABASE_URL = 'https://xdwjjfvyowveqcziwssv.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_nd0hfyx5B3XmUaX1nvtu3w_NvZQU5k8';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        let currentUser = null;
+
+        // ===== Auth check + user load =====
+        async function checkAuthAndLoadUser() {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            currentUser = session.user;
+
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .maybeSingle(); // safer than .single() — won't throw on 0 rows
+
+            if (error) {
+                console.warn('Profile fetch error:', error.message);
+            }
+
+            const display = profile || {
+                full_name: session.user.user_metadata?.full_name
+                    || session.user.email?.split('@')[0]
+                    || 'User',
+                email: session.user.email
+            };
+
+            updateUserDisplay(display);
+            await loadUserBalances(session.user.id);
+        }
+
+        function updateUserDisplay(user) {
+            const fullName = user.full_name || user.email?.split('@')[0] || 'User';
+            const firstName = fullName.split(' ')[0];
+
+            const welcomeH1 = document.getElementById('welcomeHeading');
+            if (welcomeH1) welcomeH1.textContent = `Welcome back, ${firstName}`;
+
+            const sidebarName = document.getElementById('sidebarName');
+            const sidebarEmail = document.getElementById('sidebarEmail');
+            const sidebarAvatar = document.getElementById('sidebarAvatar');
+
+            if (sidebarName) sidebarName.textContent = fullName;
+            if (sidebarEmail) sidebarEmail.textContent = user.email || 'user@example.com';
+            if (sidebarAvatar) {
+                const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                sidebarAvatar.textContent = initials || 'U';
+            }
+        }
+
+        // ===== Balances =====
+        async function loadUserBalances(userId) {
+            try {
+                const { data: balances, error } = await supabase
+                    .from('user_balances')
+                    .select('asset, balance')
+                    .eq('user_id', userId);
+
+                if (error) {
+                    console.warn('Balances fetch error:', error.message);
+                    useEmptyPortfolio();
+                    return;
+                }
+
+                if (balances && balances.length > 0) {
+                    updatePortfolioWithBalances(balances);
+                } else {
+                    // Trigger should have seeded these — try once, ignore errors
+                    await createDefaultBalances(userId);
+                    useEmptyPortfolio();
+                }
+            } catch (err) {
+                console.error(err);
+                useEmptyPortfolio();
+            }
+        }
+
+        async function createDefaultBalances(userId) {
+            const defaults = ['BTC', 'ETH', 'SOL', 'AVAX', 'USD'].map(asset => ({
+                user_id: userId,
+                asset,
+                balance: 0
+            }));
+            try {
+                const { error } = await supabase
+                    .from('user_balances')
+                    .upsert(defaults, { onConflict: 'user_id,asset', ignoreDuplicates: true });
+                if (error) console.warn('Seeding balances failed:', error.message);
+            } catch (err) {
+                console.warn('Seeding balances error:', err);
+            }
+        }
+
+        const PRICES = { BTC: 43250, ETH: 2250, SOL: 95.50, AVAX: 38.20, USD: 1 };
+        const META = {
+            BTC:  { asset: "Bitcoin",   avgPrice: 38500 },
+            ETH:  { asset: "Ethereum",  avgPrice: 1850  },
+            SOL:  { asset: "Solana",    avgPrice: 85    },
+            AVAX: { asset: "Avalanche", avgPrice: 32    }
+        };
+
+        function useEmptyPortfolio() {
+            const portfolioData = Object.keys(META).map(symbol => ({
+                asset: META[symbol].asset,
+                symbol,
+                holdings: 0,
+                avgPrice: META[symbol].avgPrice,
+                currentPrice: PRICES[symbol],
+                value: 0,
+                pnl: 0,
+                pnlPercent: 0
+            }));
+            updatePortfolioTable(portfolioData);
+            updateBalanceDisplay(0);
+        }
+
+        function updatePortfolioWithBalances(balances) {
+            const usdBalance = Number(balances.find(b => b.asset === 'USD')?.balance || 0);
+            const portfolioData = Object.keys(META).map(symbol => {
+                const bal = balances.find(b => b.asset === symbol);
+                const holdings = Number(bal?.balance || 0);
+                const currentPrice = PRICES[symbol];
+                const avgPrice = META[symbol].avgPrice;
+                const value = holdings * currentPrice;
+                const pnl = value - (holdings * avgPrice);
+                const pnlPercent = holdings > 0
+                    ? ((currentPrice - avgPrice) / avgPrice * 100).toFixed(1)
+                    : 0;
+                return {
+                    asset: META[symbol].asset,
+                    symbol,
+                    holdings,
+                    avgPrice,
+                    currentPrice,
+                    value,
+                    pnl,
+                    pnlPercent
+                };
+            });
+
+            updatePortfolioTable(portfolioData);
+
+            const totalCrypto = portfolioData.reduce((sum, a) => sum + a.value, 0);
+            const total = usdBalance + totalCrypto;
+            document.getElementById('totalBalance').textContent =
+                `$${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            updateBalanceDisplay(usdBalance + totalCrypto);
+        }
+
+        function updatePortfolioTable(portfolioData) {
+            const tbody = document.getElementById('portfolioBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = portfolioData.map(asset => `
+                <tr>
+                    <td><strong>${asset.asset}</strong> ${asset.symbol}</td>
+                    <td>${asset.holdings} ${asset.symbol}</td>
+                    <td>$${asset.avgPrice.toLocaleString()}</td>
+                    <td>$${asset.currentPrice.toLocaleString()}</td>
+                    <td>$${asset.value.toLocaleString()}</td>
+                    <td class="${asset.pnl >= 0 ? 'positive' : 'negative'}">
+                        ${asset.pnl >= 0 ? '▲' : '▼'} $${Math.abs(asset.pnl).toLocaleString()} (${Math.abs(asset.pnlPercent)}%)
+                    </td>
+                    <td><button class="btn-small" onclick="location.href='trade.html'">Trade</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function updateBalanceDisplay(amount) {
+            const el = document.getElementById('balanceDisplay');
+            if (el) el.textContent =
+                `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        // ===== Logout =====
+        window.logout = async function() {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        };
+
+        function showMessage(msg) { alert(msg); }
+
+        // ===== Theme toggle =====
+        window.toggleTheme = function() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('bluepeak_theme', next);
+            updateThemeBtn();
+            // Re-init chart to match theme
+            if (typeof initTradingView === 'function') initTradingView();
+        };
+
+        function updateThemeBtn() {
+            const btn = document.getElementById('themeToggleBtn');
+            if (!btn) return;
+            btn.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙';
+        }
+        updateThemeBtn();
+
+        // ===== Sidebar =====
+        window.openSidebar = () => document.getElementById('sidebarOverlay').classList.add('active');
+        window.closeSidebar = () => document.getElementById('sidebarOverlay').classList.remove('active');
+
+        // ===== TradingView =====
+        let tvWidget = null;
         function initTradingView() {
-            if (tvWidget) tvWidget.remove();
+            const container = document.getElementById('tradingview_chart');
+            if (!container) return;
+            container.innerHTML = '';
             const pair = document.getElementById('chartPair').value;
+            const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
             tvWidget = new TradingView.widget({
                 symbol: pair,
                 interval: "D",
@@ -975,65 +913,69 @@
                 width: "100%",
                 height: 400,
                 autosize: true,
-                toolbar_bg: "#f1f3f6",
+                toolbar_bg: theme === 'light' ? '#f1f3f6' : '#1f2937',
                 enable_publishing: false,
                 hide_side_toolbar: false,
                 allow_symbol_change: true,
                 save_image: false,
                 style: "1",
                 timezone: "exchange",
-                theme: "light"
+                theme: theme
             });
         }
+        window.changeChartPair = initTradingView;
 
-        function changeChartPair() { initTradingView(); }
-
+        // ===== Order book (mock) =====
         function updateOrderBook() {
-            const basePrice = 43250;
+            const basePrice = PRICES.BTC;
             const asks = [], bids = [];
             for (let i = 1; i <= 5; i++) {
-                asks.push({ price: basePrice + (i * 5), size: (Math.random() * 2).toFixed(3), total: ((basePrice + (i * 5)) * Math.random() * 2).toFixed(0) });
-                bids.push({ price: basePrice - (i * 5), size: (Math.random() * 2).toFixed(3), total: ((basePrice - (i * 5)) * Math.random() * 2).toFixed(0) });
+                asks.push({ price: basePrice + i * 5, size: (Math.random() * 2).toFixed(3), total: (basePrice + i * 5) * Math.random() * 2 });
+                bids.push({ price: basePrice - i * 5, size: (Math.random() * 2).toFixed(3), total: (basePrice - i * 5) * Math.random() * 2 });
             }
-            document.getElementById('askOrders').innerHTML = asks.map(a => `<tr><td class="ask">$${a.price.toFixed(0)}</td><td>${a.size}</td><td>$${parseInt(a.total).toLocaleString()}</td></tr>`).join('');
-            document.getElementById('bidOrders').innerHTML = bids.map(b => `<tr><td class="bid">$${b.price.toFixed(0)}</td><td>${b.size}</td><td>$${parseInt(b.total).toLocaleString()}</td></tr>`).join('');
+            document.getElementById('askOrders').innerHTML = asks.map(a =>
+                `<tr><td class="ask">$${a.price.toFixed(0)}</td><td>${a.size}</td><td>$${parseInt(a.total).toLocaleString()}</td></tr>`).join('');
+            document.getElementById('bidOrders').innerHTML = bids.map(b =>
+                `<tr><td class="bid">$${b.price.toFixed(0)}</td><td>${b.size}</td><td>$${parseInt(b.total).toLocaleString()}</td></tr>`).join('');
         }
 
-        function addPriceAlert() {
+        // ===== Alerts (localStorage) =====
+        window.addPriceAlert = function() {
             const coin = document.getElementById('alertCoin').value;
             const condition = document.getElementById('alertCondition').value;
             const price = parseFloat(document.getElementById('alertPrice').value);
             if (!price || price <= 0) { alert('Please enter a valid price'); return; }
-            let priceAlerts = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
-            priceAlerts.push({ coin, condition, price, triggered: false });
-            localStorage.setItem('priceAlerts', JSON.stringify(priceAlerts));
+            const arr = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
+            arr.push({ coin, condition, price, triggered: false });
+            localStorage.setItem('priceAlerts', JSON.stringify(arr));
             renderAlerts();
             document.getElementById('alertPrice').value = '';
-            alert(`Alert set for ${coin} ${condition} $${price}`);
-        }
-        
-        function deleteAlert(index) {
-            let priceAlerts = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
-            priceAlerts.splice(index, 1);
-            localStorage.setItem('priceAlerts', JSON.stringify(priceAlerts));
+        };
+
+        window.deleteAlert = function(index) {
+            const arr = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
+            arr.splice(index, 1);
+            localStorage.setItem('priceAlerts', JSON.stringify(arr));
             renderAlerts();
-        }
-        
+        };
+
         function renderAlerts() {
-            let priceAlerts = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
-            const alertList = document.getElementById('alertList');
-            if (priceAlerts.length === 0) {
-                alertList.innerHTML = '<p style="padding: 1rem; color: var(--text-secondary); font-size: 0.8rem;">No alerts set. Create one above.</p>';
+            const arr = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
+            const el = document.getElementById('alertList');
+            if (!el) return;
+            if (!arr.length) {
+                el.innerHTML = '<p style="padding:1rem;color:var(--text-secondary);font-size:0.8rem;">No alerts set. Create one above.</p>';
                 return;
             }
-            alertList.innerHTML = priceAlerts.map((alert, i) => `
+            el.innerHTML = arr.map((a, i) => `
                 <div class="alert-item">
-                    <span>${alert.coin} ${alert.condition === 'above' ? '↑' : '↓'} $${alert.price.toLocaleString()}</span>
+                    <span>${a.coin} ${a.condition === 'above' ? '↑' : '↓'} $${a.price.toLocaleString()}</span>
                     <button class="delete-alert" onclick="deleteAlert(${i})">Delete</button>
                 </div>
             `).join('');
         }
 
+        // ===== News (mock) =====
         const newsData = [
             { title: "Bitcoin surges past $43,000 as institutional inflows continue", time: "2 hours ago", source: "CoinDesk" },
             { title: "Ethereum futures ETF launch expected next week", time: "4 hours ago", source: "Bloomberg" },
@@ -1043,29 +985,25 @@
         ];
 
         function loadNews() {
-            const newsFeed = document.getElementById('newsFeed');
-            newsFeed.innerHTML = newsData.map(news => `
+            const feed = document.getElementById('newsFeed');
+            if (!feed) return;
+            feed.innerHTML = newsData.map(n => `
                 <div class="news-item" onclick="showMessage('Full article coming soon')">
-                    <div class="news-title">${news.title}</div>
-                    <div class="news-time">${news.time} • ${news.source}</div>
+                    <div class="news-title">${n.title}</div>
+                    <div class="news-time">${n.time} • ${n.source}</div>
                 </div>
             `).join('');
         }
 
-        function showMessage(msg) { alert(msg); }
-
-        function openSidebar() { document.getElementById('sidebarOverlay').classList.add('active'); }
-        function closeSidebar() { document.getElementById('sidebarOverlay').classList.remove('active'); }
-
-        function init() {
+        // ===== Boot =====
+        (async () => {
             updateOrderBook();
             renderAlerts();
             loadNews();
             setTimeout(() => initTradingView(), 500);
-            setInterval(() => updateOrderBook(), 5000);
-        }
-        
-        init();
+            setInterval(updateOrderBook, 5000);
+            await checkAuthAndLoadUser();
+        })();
     </script>
 </body>
 </html>
