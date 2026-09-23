@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=yes" />
-    <meta name="description" content="BluepeakCapital - 24/7 institutional support. Get help with trading, deposits, withdrawals, and account management." />
+    <meta name="description" content="BluepeakCapital - 24/7 institutional support." />
     <title>BluepeakCapital | Support Center</title>
     <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,20 80,40 80,70 50,90 20,70 20,40' fill='%233b82f6'/%3E%3C/svg%3E" />
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
-    
-    <!-- THEME CONTROLLER - MUST BE FIRST -->
+
     <script>
-        function initTheme() {
+        (function initTheme() {
             const savedTheme = localStorage.getItem('bluepeak_theme');
             if (savedTheme === 'light') {
                 document.documentElement.setAttribute('data-theme', 'light');
@@ -19,36 +18,12 @@
                 document.documentElement.setAttribute('data-theme', 'dark');
                 localStorage.setItem('bluepeak_theme', 'dark');
             }
-        }
-        initTheme();
+        })();
     </script>
-    
-    <!-- Supabase SDK -->
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-        const supabaseUrl = 'https://txcbfzcomfyavcgqcevq.supabase.co'
-        const supabaseAnonKey = 'sb_publishable_6-gQnlgqnM20wQ9iWx5lsw_ZD7Uz5bH'
-        const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-        async function checkAuth() {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) {
-                window.location.href = 'login.html'
-            }
-        }
-        
-        checkAuth()
-    </script>
-    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* Dark Mode as Default */
         :root {
             --bg-primary: #0a0e17;
             --bg-secondary: #111827;
@@ -61,11 +36,8 @@
             --hover-bg: #374151;
             --btn-primary: #3b82f6;
             --btn-primary-hover: #2563eb;
-            --positive: #10b981;
-            --negative: #ef4444;
         }
 
-        /* Light Mode */
         [data-theme="light"] {
             --bg-primary: #f5f7fb;
             --bg-secondary: #ffffff;
@@ -85,7 +57,6 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* Navigation */
         nav {
             display: flex;
             justify-content: space-between;
@@ -98,66 +69,46 @@
             z-index: 100;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            cursor: pointer;
-        }
-
+        .logo { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
         .logo-icon {
-            width: 28px;
-            height: 28px;
+            width: 28px; height: 28px;
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             border-radius: 7px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.8rem;
-            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.8rem; color: white;
         }
-
         .logo-text {
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: 1rem; font-weight: 700;
             background: linear-gradient(135deg, #3b82f6, #60a5fa);
-            -webkit-background-clip: text;
-            background-clip: text;
+            -webkit-background-clip: text; background-clip: text;
             color: transparent;
         }
 
-        /* Desktop Navigation */
-        .nav-links {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
+        .nav-links { display: flex; gap: 1rem; align-items: center; }
         .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
             font-size: 0.75rem;
             font-weight: 500;
         }
+        .nav-links a:hover, .nav-links a.active { color: #3b82f6; }
 
-        .nav-links a:hover, .nav-links a.active {
-            color: #3b82f6;
-        }
+        .right-menu { display: flex; align-items: center; gap: 0.5rem; }
 
-        /* Right Menu */
-        .right-menu {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .theme-toggle {
+            background: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem;
         }
 
         .flag-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            object-fit: cover;
-            cursor: pointer;
+            width: 28px; height: 28px;
+            border-radius: 50%; object-fit: cover; cursor: pointer;
         }
 
         .hamburger-btn {
@@ -170,51 +121,65 @@
             display: none;
         }
 
-        /* Sidebar Menu */
         .sidebar-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            inset: 0;
+            background: rgba(0,0,0,0.7);
             z-index: 2000;
             visibility: hidden;
             opacity: 0;
             transition: all 0.3s ease;
         }
-
-        .sidebar-overlay.active {
-            visibility: visible;
-            opacity: 1;
-        }
+        .sidebar-overlay.active { visibility: visible; opacity: 1; }
 
         .sidebar-menu {
             position: fixed;
             top: 0;
-            right: -280px;
-            width: 260px;
+            right: -300px;
+            width: 280px;
             height: 100%;
             background: var(--bg-secondary);
-            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+            box-shadow: -2px 0 8px rgba(0,0,0,0.3);
             z-index: 2001;
             transition: right 0.3s ease;
             display: flex;
             flex-direction: column;
-            padding: 1rem 0;
         }
-
-        .sidebar-overlay.active .sidebar-menu {
-            right: 0;
-        }
+        .sidebar-overlay.active .sidebar-menu { right: 0; }
 
         .sidebar-header {
-            padding: 1rem;
+            padding: 1.2rem;
             border-bottom: 1px solid var(--border-color);
-            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .sidebar-header .avatar-large {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .sidebar-header .user-info { display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-header .user-name {
+            font-weight: 600; font-size: 0.9rem; color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .sidebar-header .user-email {
+            font-size: 0.7rem; color: var(--text-secondary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        .sidebar-menu a {
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5rem 0;
+            overflow-y: auto;
+        }
+        .sidebar-nav a {
             display: block;
             padding: 0.8rem 1.2rem;
             color: var(--text-primary);
@@ -222,13 +187,14 @@
             font-size: 0.85rem;
             font-weight: 500;
         }
-
-        .sidebar-menu a:hover {
-            background: var(--hover-bg);
-            color: #3b82f6;
+        .sidebar-nav a:hover { background: var(--hover-bg); color: #3b82f6; }
+        .sidebar-nav .logout-item {
+            margin-top: auto;
+            border-top: 1px solid var(--border-color);
+            color: #ef4444;
         }
+        .sidebar-nav .logout-item:hover { background: rgba(239,68,68,0.1); color: #dc2626; }
 
-        /* Trust Bar */
         .trust-bar {
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border-color);
@@ -238,46 +204,29 @@
             flex-wrap: wrap;
             font-size: 0.6rem;
             color: var(--text-secondary);
-            overflow-x: auto;
         }
+        .trust-separator { width: 1px; height: 10px; background: var(--border-color); }
 
-        .trust-separator {
-            width: 1px;
-            height: 10px;
-            background: var(--border-color);
-        }
-
-        /* Main Container */
         .support-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 1rem;
         }
 
-        /* Hero Section */
-        .support-hero {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-
+        .support-hero { text-align: center; margin-bottom: 1.5rem; }
         .support-hero h1 {
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 0.3rem;
             color: var(--text-primary);
         }
-
         .support-hero p {
             color: var(--text-secondary);
             font-size: 0.8rem;
             margin-bottom: 1rem;
         }
 
-        .search-box {
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
+        .search-box { max-width: 400px; margin: 0 auto; }
         .search-box input {
             width: 100%;
             padding: 0.5rem 1rem;
@@ -287,19 +236,15 @@
             background: var(--bg-input);
             color: var(--text-primary);
         }
+        .search-box input::placeholder { color: var(--text-secondary); }
+        .search-box input:focus { outline: none; border-color: #3b82f6; }
 
-        .search-box input::placeholder {
-            color: var(--text-secondary);
-        }
-
-        /* Quick Actions */
         .quick-actions {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 0.8rem;
             margin-bottom: 1.5rem;
         }
-
         .quick-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -309,30 +254,11 @@
             cursor: pointer;
             transition: all 0.2s;
         }
+        .quick-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+        .quick-icon { font-size: 1.3rem; margin-bottom: 0.4rem; }
+        .quick-title { font-weight: 600; font-size: 0.7rem; margin-bottom: 0.2rem; color: var(--text-primary); }
+        .quick-desc { font-size: 0.55rem; color: var(--text-secondary); }
 
-        .quick-card:hover {
-            transform: translateY(-2px);
-            border-color: #3b82f6;
-        }
-
-        .quick-icon {
-            font-size: 1.3rem;
-            margin-bottom: 0.4rem;
-        }
-
-        .quick-title {
-            font-weight: 600;
-            font-size: 0.7rem;
-            margin-bottom: 0.2rem;
-            color: var(--text-primary);
-        }
-
-        .quick-desc {
-            font-size: 0.55rem;
-            color: var(--text-secondary);
-        }
-
-        /* Two Column Layout */
         .support-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -340,8 +266,7 @@
             margin-bottom: 1.5rem;
         }
 
-        /* FAQ Section */
-        .faq-section, .contact-section {
+        .faq-section, .contact-section, .status-section {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
@@ -357,11 +282,7 @@
             color: var(--text-primary);
         }
 
-        /* FAQ Accordion */
-        .faq-item {
-            border-bottom: 1px solid var(--border-color);
-        }
-
+        .faq-item { border-bottom: 1px solid var(--border-color); }
         .faq-question {
             display: flex;
             justify-content: space-between;
@@ -372,12 +293,10 @@
             font-size: 0.8rem;
             color: var(--text-primary);
         }
-
         .faq-question span {
             font-size: 0.7rem;
             color: var(--text-secondary);
         }
-
         .faq-answer {
             max-height: 0;
             overflow: hidden;
@@ -386,24 +305,15 @@
             font-size: 0.7rem;
             line-height: 1.4;
         }
+        .faq-answer.active { max-height: 300px; padding-bottom: 0.7rem; }
 
-        .faq-answer.active {
-            max-height: 200px;
-            padding-bottom: 0.7rem;
-        }
-
-        /* Contact Form */
-        .contact-form .form-group {
-            margin-bottom: 0.8rem;
-        }
-
+        .contact-form .form-group { margin-bottom: 0.8rem; }
         .contact-form label {
             display: block;
             font-size: 0.65rem;
             color: var(--text-secondary);
             margin-bottom: 0.2rem;
         }
-
         .contact-form input, .contact-form select, .contact-form textarea {
             width: 100%;
             padding: 0.5rem;
@@ -412,16 +322,16 @@
             font-size: 0.75rem;
             background: var(--bg-input);
             color: var(--text-primary);
+            font-family: inherit;
         }
-
+        .contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
         .contact-form input::placeholder, .contact-form textarea::placeholder {
             color: var(--text-secondary);
         }
-
-        .contact-form textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
+        .contact-form textarea { resize: vertical; min-height: 80px; }
 
         .btn-primary {
             background: var(--btn-primary);
@@ -432,23 +342,19 @@
             font-size: 0.75rem;
             cursor: pointer;
             width: 100%;
+            font-family: inherit;
+            font-weight: 500;
         }
+        .btn-primary:hover { background: var(--btn-primary-hover); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .btn-primary:hover {
-            background: var(--btn-primary-hover);
-        }
-
-        /* Knowledge Base */
-        .kb-section {
-            margin-bottom: 1.5rem;
-        }
+        .kb-section { margin-bottom: 1.5rem; }
 
         .kb-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 0.8rem;
         }
-
         .kb-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -457,38 +363,12 @@
             cursor: pointer;
             transition: all 0.2s;
         }
+        .kb-card:hover { border-color: #3b82f6; }
+        .kb-category { font-size: 0.6rem; color: #3b82f6; margin-bottom: 0.3rem; }
+        .kb-title { font-weight: 600; margin-bottom: 0.3rem; font-size: 0.75rem; color: var(--text-primary); }
+        .kb-desc { font-size: 0.65rem; color: var(--text-secondary); }
 
-        .kb-card:hover {
-            border-color: #3b82f6;
-        }
-
-        .kb-category {
-            font-size: 0.6rem;
-            color: #3b82f6;
-            margin-bottom: 0.3rem;
-        }
-
-        .kb-title {
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-            font-size: 0.75rem;
-            color: var(--text-primary);
-        }
-
-        .kb-desc {
-            font-size: 0.65rem;
-            color: var(--text-secondary);
-        }
-
-        /* System Status */
-        .status-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
+        .status-section { margin-bottom: 1.5rem; }
         .status-item {
             display: flex;
             justify-content: space-between;
@@ -496,59 +376,42 @@
             padding: 0.5rem 0;
             border-bottom: 1px solid var(--border-color);
         }
-
-        .status-name {
-            font-size: 0.75rem;
-            color: var(--text-primary);
-        }
-
+        .status-item:last-child { border-bottom: none; }
+        .status-name { font-size: 0.75rem; color: var(--text-primary); }
         .status-badge {
             font-size: 0.6rem;
             padding: 0.15rem 0.5rem;
             border-radius: 16px;
         }
-
         .status-operational {
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(16,185,129,0.15);
             color: #10b981;
         }
 
-        /* Mobile Responsive */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            z-index: 3000;
+            max-width: 320px;
+        }
+
         @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            .hamburger-btn {
-                display: block;
-            }
-            .support-container {
-                padding: 0.8rem;
-            }
-            .quick-actions {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.6rem;
-            }
-            .support-grid {
-                grid-template-columns: 1fr;
-                gap: 0.8rem;
-            }
-            .kb-grid {
-                grid-template-columns: 1fr;
-                gap: 0.6rem;
-            }
-            .trust-bar {
-                display: none;
-            }
-            .support-hero h1 {
-                font-size: 1.3rem;
-            }
-            .faq-question {
-                font-size: 0.75rem;
-            }
-            .flag-icon {
-                width: 24px;
-                height: 24px;
-            }
+            .nav-links { display: none; }
+            .hamburger-btn { display: block; }
+            .support-container { padding: 0.8rem; }
+            .quick-actions { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+            .support-grid { grid-template-columns: 1fr; gap: 0.8rem; }
+            .kb-grid { grid-template-columns: 1fr; gap: 0.6rem; }
+            .trust-bar { display: none; }
+            .support-hero h1 { font-size: 1.3rem; }
+            .faq-question { font-size: 0.75rem; }
+            .flag-icon { width: 24px; height: 24px; }
         }
     </style>
 </head>
@@ -570,33 +433,37 @@
             <a href="#" class="active">Support</a>
         </div>
         <div class="right-menu">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
             <img src="https://flagcdn.com/w320/us.png" alt="USD" class="flag-icon" onclick="showToast('Currency: USD')">
             <button class="hamburger-btn" onclick="openSidebar()">☰</button>
         </div>
     </nav>
 
-    <!-- Sidebar Menu -->
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()">
         <div class="sidebar-menu" onclick="event.stopPropagation()">
             <div class="sidebar-header">
-                <div class="logo">
-                    <div class="logo-icon">⛰️</div>
-                    <div class="logo-text">BluepeakCapital</div>
+                <div class="avatar-large" id="sidebarAvatar">U</div>
+                <div class="user-info">
+                    <span class="user-name" id="sidebarName">Loading…</span>
+                    <span class="user-email" id="sidebarEmail">…</span>
                 </div>
             </div>
-            <a href="dashboard.html">Dashboard</a>
-            <a href="trade.html">Trade</a>
-            <a href="markets.html">Markets</a>
-            <a href="orders.html">Orders</a>
-            <a href="bots.html">Bots</a>
-            <a href="deposit.html">Deposit</a>
-            <a href="withdraw.html">Withdraw</a>
-            <a href="settings.html">Settings</a>
-            <a href="support.html">Support</a>
+            <div class="sidebar-nav">
+                <a href="index.html">Home</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="trade.html">Trade</a>
+                <a href="markets.html">Markets</a>
+                <a href="orders.html">Orders</a>
+                <a href="bots.html">Bots</a>
+                <a href="deposit.html">Deposit</a>
+                <a href="withdraw.html">Withdraw</a>
+                <a href="settings.html">Settings</a>
+                <a href="support.html">Support</a>
+                <a href="#" class="logout-item" onclick="logout(); return false;">Logout</a>
+            </div>
         </div>
     </div>
 
-    <!-- Trust Bar -->
     <div class="trust-bar">
         <span>FINRA Member</span>
         <span class="trust-separator"></span>
@@ -610,45 +477,41 @@
     </div>
 
     <div class="support-container">
-        <!-- Hero Section -->
         <div class="support-hero">
             <h1>How can we help?</h1>
             <p>Get instant answers from our support team</p>
             <div class="search-box">
-                <input type="text" placeholder="Search..." id="searchInput" onkeyup="searchFAQ()">
+                <input type="text" placeholder="Search FAQ, guides…" id="searchInput" oninput="searchAll()">
             </div>
         </div>
 
-        <!-- Quick Actions -->
         <div class="quick-actions">
             <div class="quick-card" onclick="scrollToContact()">
                 <div class="quick-icon">💬</div>
-                <div class="quick-title">Live Chat</div>
+                <div class="quick-title">Contact</div>
                 <div class="quick-desc">24/7 support</div>
             </div>
-            <div class="quick-card" onclick="showToast('Ticket system')">
+            <div class="quick-card" onclick="scrollToContact()">
                 <div class="quick-icon">🎫</div>
                 <div class="quick-title">Submit Ticket</div>
                 <div class="quick-desc">Email support</div>
             </div>
-            <div class="quick-card" onclick="showToast('Callback')">
+            <div class="quick-card" onclick="showToast('Callbacks are scheduled via ticket')">
                 <div class="quick-icon">📞</div>
                 <div class="quick-title">Callback</div>
                 <div class="quick-desc">We'll call you</div>
             </div>
-            <div class="quick-card" onclick="showToast('Guides')">
+            <div class="quick-card" onclick="showToast('Guides section below')">
                 <div class="quick-icon">📚</div>
                 <div class="quick-title">Guides</div>
                 <div class="quick-desc">Step-by-step</div>
             </div>
         </div>
 
-        <!-- FAQ + Contact -->
         <div class="support-grid">
-            <!-- FAQ Section -->
             <div class="faq-section">
                 <div class="section-title">FAQ</div>
-                
+
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFAQ(this)">
                         How do I deposit funds?
@@ -658,7 +521,7 @@
                         Navigate to Deposit. Select your cryptocurrency, copy the address, and send funds. Deposits confirm within 10-30 minutes.
                     </div>
                 </div>
-                
+
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFAQ(this)">
                         What are withdrawal fees?
@@ -668,7 +531,7 @@
                         Fees vary by asset. BTC: 0.0005, ETH: 0.005, USDT: $5, SOL: 0.01. Minimum amounts apply.
                     </div>
                 </div>
-                
+
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFAQ(this)">
                         How to enable 2FA?
@@ -678,7 +541,7 @@
                         Go to Settings → Security → Enable 2FA. Scan QR code with Google Authenticator or Authy.
                     </div>
                 </div>
-                
+
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFAQ(this)">
                         Minimum deposit?
@@ -688,7 +551,7 @@
                         BTC: 0.001, ETH: 0.01, USDT: $50, SOL: 0.1. Below these may not be credited.
                     </div>
                 </div>
-                
+
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFAQ(this)">
                         Withdrawal time?
@@ -700,17 +563,16 @@
                 </div>
             </div>
 
-            <!-- Contact Form -->
             <div class="contact-section" id="contactSection">
                 <div class="section-title">Contact Support</div>
                 <form class="contact-form" id="supportForm">
                     <div class="form-group">
                         <label>Full Name</label>
-                        <input type="text" id="contactName" placeholder="John Doe">
+                        <input type="text" id="contactName" placeholder="John Doe" required>
                     </div>
                     <div class="form-group">
                         <label>Email</label>
-                        <input type="email" id="contactEmail" placeholder="john@example.com">
+                        <input type="email" id="contactEmail" placeholder="john@example.com" required>
                     </div>
                     <div class="form-group">
                         <label>Subject</label>
@@ -724,43 +586,42 @@
                     </div>
                     <div class="form-group">
                         <label>Message</label>
-                        <textarea id="contactMessage" placeholder="Describe your issue..."></textarea>
+                        <textarea id="contactMessage" placeholder="Describe your issue…" required></textarea>
                     </div>
-                    <button type="submit" class="btn-primary">Submit</button>
+                    <button type="submit" class="btn-primary" id="submitTicketBtn">Submit Ticket</button>
                 </form>
             </div>
         </div>
 
-        <!-- Knowledge Base -->
         <div class="kb-section">
             <div class="section-title">Knowledge Base</div>
             <div class="kb-grid">
-                <div class="kb-card" onclick="showToast('Getting Started')">
+                <div class="kb-card" data-kb="account kyс setup" onclick="showToast('Getting Started coming soon')">
                     <div class="kb-category">Getting Started</div>
                     <div class="kb-title">Account Setup & KYC</div>
                     <div class="kb-desc">Step-by-step guide</div>
                 </div>
-                <div class="kb-card" onclick="showToast('Trading Guide')">
+                <div class="kb-card" data-kb="trading order types market limit stop" onclick="showToast('Trading guide coming soon')">
                     <div class="kb-category">Trading</div>
                     <div class="kb-title">Order Types</div>
                     <div class="kb-desc">Market, Limit, Stop Loss</div>
                 </div>
-                <div class="kb-card" onclick="showToast('Security Guide')">
+                <div class="kb-card" data-kb="security 2fa best practices" onclick="showToast('Security guide coming soon')">
                     <div class="kb-category">Security</div>
                     <div class="kb-title">Best Practices</div>
                     <div class="kb-desc">Keep assets safe</div>
                 </div>
-                <div class="kb-card" onclick="showToast('API Guide')">
+                <div class="kb-card" data-kb="api rest documentation" onclick="showToast('API docs coming soon')">
                     <div class="kb-category">API</div>
                     <div class="kb-title">REST API Docs</div>
                     <div class="kb-desc">Connect your bots</div>
                 </div>
-                <div class="kb-card" onclick="showToast('Fees Guide')">
+                <div class="kb-card" data-kb="fees maker taker tiers" onclick="showToast('Fee guide coming soon')">
                     <div class="kb-category">Fees</div>
                     <div class="kb-title">Fee Structure</div>
                     <div class="kb-desc">Maker/taker tiers</div>
                 </div>
-                <div class="kb-card" onclick="showToast('Tax Guide')">
+                <div class="kb-card" data-kb="tax report csv export" onclick="showToast('Tax guide coming soon')">
                     <div class="kb-category">Tax</div>
                     <div class="kb-title">Tax Reporting</div>
                     <div class="kb-desc">Generate reports</div>
@@ -768,7 +629,6 @@
             </div>
         </div>
 
-        <!-- System Status -->
         <div class="status-section">
             <div class="section-title">System Status</div>
             <div class="status-item">
@@ -794,52 +654,175 @@
         </div>
     </div>
 
+    <div id="toastMessage" class="toast"></div>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        function toggleFAQ(element) {
+        // ===== Supabase Init (matches every other page) =====
+        const SUPABASE_URL = 'https://xdwjjfvyowveqcziwssv.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_nd0hfyx5B3XmUaX1nvtu3w_NvZQU5k8';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+
+        // ===== Auth (soft — support page is public) =====
+        async function initAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                updateSidebarUser({ full_name: 'Guest', email: 'Not signed in' });
+                return;
+            }
+            currentUser = session.user;
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .maybeSingle();
+
+            const display = profile || {
+                full_name: currentUser.user_metadata?.full_name
+                    || currentUser.email?.split('@')[0]
+                    || 'User',
+                email: currentUser.email
+            };
+            updateSidebarUser(display);
+
+            // Prefill contact form
+            const nameInput = document.getElementById('contactName');
+            const emailInput = document.getElementById('contactEmail');
+            if (nameInput && !nameInput.value) nameInput.value = display.full_name || '';
+            if (emailInput && !emailInput.value) emailInput.value = display.email || '';
+        }
+
+        function updateSidebarUser(user) {
+            const fullName = user.full_name || 'User';
+            const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'U';
+            document.getElementById('sidebarName').textContent = fullName;
+            document.getElementById('sidebarEmail').textContent = user.email || '';
+            document.getElementById('sidebarAvatar').textContent = initials;
+        }
+
+        // ===== FAQ =====
+        window.toggleFAQ = function (element) {
             const answer = element.nextElementSibling;
             const arrow = element.querySelector('span');
             answer.classList.toggle('active');
-            arrow.innerHTML = answer.classList.contains('active') ? '▲' : '▼';
-        }
+            arrow.textContent = answer.classList.contains('active') ? '▲' : '▼';
+        };
 
-        function searchFAQ() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        // ===== Search: FAQ + KB =====
+        window.searchAll = function () {
+            const term = document.getElementById('searchInput').value.toLowerCase().trim();
+
             document.querySelectorAll('.faq-item').forEach(item => {
-                const question = item.querySelector('.faq-question').textContent.toLowerCase();
-                const answer = item.querySelector('.faq-answer').textContent.toLowerCase();
-                item.style.display = (question.includes(searchTerm) || answer.includes(searchTerm) || searchTerm === '') ? 'block' : 'none';
+                const q = item.querySelector('.faq-question').textContent.toLowerCase();
+                const a = item.querySelector('.faq-answer').textContent.toLowerCase();
+                item.style.display = (!term || q.includes(term) || a.includes(term)) ? 'block' : 'none';
             });
-        }
 
-        function scrollToContact() {
+            document.querySelectorAll('.kb-card').forEach(card => {
+                const text = (card.textContent + ' ' + (card.dataset.kb || '')).toLowerCase();
+                card.style.display = (!term || text.includes(term)) ? 'block' : 'none';
+            });
+        };
+
+        // ===== Scroll =====
+        window.scrollToContact = function () {
             document.getElementById('contactSection').scrollIntoView({ behavior: 'smooth' });
-            showToast('Live chat will open');
-        }
+        };
 
-        function showToast(msg) {
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.7rem; z-index: 1000;';
-            toast.textContent = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
-        }
-
-        document.getElementById('supportForm').addEventListener('submit', function(e) {
+        // ===== Ticket submission (real DB write) =====
+        document.getElementById('supportForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            const name = document.getElementById('contactName').value;
-            const email = document.getElementById('contactEmail').value;
-            const message = document.getElementById('contactMessage').value;
-            
-            if (name && email && message) {
-                showToast('Ticket submitted! Response within 24 hours');
+
+            const name = document.getElementById('contactName').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+            const subject = document.getElementById('contactSubject').value;
+            const message = document.getElementById('contactMessage').value.trim();
+
+            if (!name || !email || !message) {
+                return showToast('Please fill in all fields', 'error');
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                return showToast('Please enter a valid email', 'error');
+            }
+            if (message.length < 10) {
+                return showToast('Message is too short', 'error');
+            }
+
+            const btn = document.getElementById('submitTicketBtn');
+            const orig = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Submitting…';
+
+            try {
+                const { error } = await supabase
+                    .from('support_tickets')
+                    .insert({
+                        user_id: currentUser?.id || null,
+                        name,
+                        email,
+                        subject,
+                        message,
+                        status: 'open'
+                    });
+
+                if (error) {
+                    showToast(error.message, 'error');
+                    return;
+                }
+
+                showToast('Ticket submitted! We\'ll respond within 24h', 'success');
                 document.getElementById('contactMessage').value = '';
-            } else {
-                showToast('Please fill in all required fields');
+            } catch (err) {
+                console.error(err);
+                showToast('Submission failed — try again', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = orig;
             }
         });
 
-        function openSidebar() { document.getElementById('sidebarOverlay').classList.add('active'); }
-        function closeSidebar() { document.getElementById('sidebarOverlay').classList.remove('active'); }
+        // ===== Toast =====
+        function showToast(msg, type) {
+            const t = document.getElementById('toastMessage');
+            t.textContent = msg;
+            t.style.background = type === 'error' ? '#ef4444' : (type === 'success' ? '#10b981' : '#1e293b');
+            t.style.display = 'block';
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => { t.style.display = 'none'; }, 3000);
+        }
+
+        // ===== Theme =====
+        window.toggleTheme = function () {
+            const cur = document.documentElement.getAttribute('data-theme');
+            const next = cur === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('bluepeak_theme', next);
+            updateThemeBtn();
+        };
+        function updateThemeBtn() {
+            const btn = document.getElementById('themeToggleBtn');
+            if (!btn) return;
+            btn.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙';
+        }
+
+        // ===== Sidebar =====
+        window.openSidebar = () => document.getElementById('sidebarOverlay').classList.add('active');
+        window.closeSidebar = () => document.getElementById('sidebarOverlay').classList.remove('active');
+
+        window.logout = async function () {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        };
+
+        // ===== Boot =====
+        (async () => {
+            updateThemeBtn();
+            await initAuth();
+        })();
     </script>
 </body>
 </html>
