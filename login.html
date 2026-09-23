@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>BluepeakCapital | Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+        // UPDATED: Your new Supabase credentials
+        const supabaseUrl = 'https://nlrrnqzbotfnmltpaxvw.supabase.co'
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5scnJucXpib3Rmbm1sdHBheHZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MTI0NjYsImV4cCI6MjEwNDA4ODQ2Nn0.PphFiwnKxHJhrqq0lPo336eUEVCBZNxXmmq3usSQj9I'
+        const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+        // Toggle Password Visibility
+        window.togglePassword = function() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('togglePasswordIcon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+            } else {
+                input.type = 'password';
+                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+            }
+        }
+
+        // Handle Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                alert(error.message);
+            } else {
+                localStorage.setItem('user', JSON.stringify(data.user));
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        // Redirect if already logged in
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) window.location.href = 'dashboard.html';
+        });
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fb 0%, #ffffff 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: white;
+            border-radius: 24px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
+            border: 1px solid #eef2f6;
+        }
+        .logo { text-align: center; margin-bottom: 2rem; }
+        .logo-icon {
+            width: 48px; height: 48px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        h1 { font-size: 1.75rem; font-weight: 600; text-align: center; margin-bottom: 0.5rem; }
+        .subtitle { text-align: center; color: #5b677b; margin-bottom: 2rem; font-size: 0.9rem; }
+        .input-group { margin-bottom: 1.5rem; }
+        label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem; color: #1e293b; }
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background: #fff;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        .toggle-btn {
+            position: absolute;
+            right: 12px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            padding: 0;
+            color: #64748b;
+        }
+        .toggle-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: #64748b;
+            stroke-width: 2;
+            fill: none;
+        }
+        button[type="submit"] {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            padding: 0.9rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: all 0.2s;
+        }
+        button[type="submit"]:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(59,130,246,0.3); }
+        .footer-links { text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: #5b677b; }
+        .footer-links a { color: #3b82f6; text-decoration: none; font-weight: 500; }
+        @media (max-width: 500px) { .login-card { padding: 1.5rem; margin: 1rem; } }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo">
+            <div class="logo-icon">⛰️</div>
+            <div class="logo-text" style="font-size: 1.5rem; font-weight: 700;">Bluepeak<span style="color:#3b82f6">Capital</span></div>
+        </div>
+        <h1>Welcome back</h1>
+        <p class="subtitle">Sign in to your account</p>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <label>Email address</label>
+                <input type="email" id="email" placeholder="john@example.com" required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                    <button type="button" class="toggle-btn" onclick="togglePassword()">
+                        <svg id="togglePasswordIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <button type="submit">Sign In →</button>
+        </form>
+        <div class="footer-links">
+            <p>Don't have an account? <a href="signup.html">Get started →</a></p>
+            <p style="margin-top: 0.8rem;"><a href="index.html">← Back to homepage</a></p>
+        </div>
+    </div>
+</body>
+</html>
