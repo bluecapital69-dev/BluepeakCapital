@@ -6,10 +6,9 @@
     <meta name="description" content="BluepeakCapital - Institutional-grade cryptocurrency trading platform dashboard" />
     <title>BluepeakCapital | Institutional Dashboard</title>
     <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,20 80,40 80,70 50,90 20,70 20,40' fill='%233b82f6'/%3E%3C/svg%3E" />
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
-    
-    <!-- THEME CONTROLLER - MUST BE FIRST -->
+
     <script>
         (function initTheme() {
             const savedTheme = localStorage.getItem('bluepeak_theme');
@@ -21,17 +20,9 @@
             }
         })();
     </script>
-    
+
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    
-    <script>
-        window.__lc = window.__lc || {};
-        window.__lc.license = 19515979;
-        window.__lc.integration_name = "manual_onboarding";
-        window.__lc.product_name = "livechat";
-        (function(n,t,c){function i(n){return e._h?e._h.apply(null,n):e._q.push(n)}var e={_q:[],_h:null,_v:"2.0",on:function(){i(["on",c.call(arguments)])},once:function(){i(["once",c.call(arguments)])},off:function(){i(["off",c.call(arguments)])},get:function(){if(!e._h)throw new Error("[LiveChatWidget] You can't use getters before load.");return i(["get",c.call(arguments)])},call:function(){i(["call",c.call(arguments)])},init:function(){var n=t.createElement("script");n.async=!0,n.type="text/javascript",n.src="https://cdn.livechatinc.com/tracking.js",t.head.appendChild(n)}};!n.__lc.asyncInit&&e.init(),n.LiveChatWidget=n.LiveChatWidget||e}(window,document,[].slice))
-    </script>
-    
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -39,23 +30,27 @@
             --bg-primary: #0a0e17;
             --bg-secondary: #111827;
             --bg-card: #1f2937;
+            --bg-input: #374151;
             --text-primary: #f3f4f6;
             --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
             --border-color: #374151;
             --nav-bg: #111827;
-            --stat-bg: #1f2937;
             --hover-bg: #374151;
+            --positive: #10b981;
+            --negative: #ef4444;
         }
 
         [data-theme="light"] {
             --bg-primary: #f5f7fb;
             --bg-secondary: #ffffff;
             --bg-card: #ffffff;
+            --bg-input: #f8fafc;
             --text-primary: #1a1f36;
             --text-secondary: #64748b;
+            --text-muted: #94a3b8;
             --border-color: #e2e8f0;
             --nav-bg: #ffffff;
-            --stat-bg: #ffffff;
             --hover-bg: #f1f5f9;
         }
 
@@ -63,8 +58,6 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
-            overflow-x: hidden;
-            width: 100%;
             transition: background 0.3s ease, color 0.3s ease;
         }
 
@@ -82,61 +75,57 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-        }
-
+        .logo-area { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
         .logo-icon {
-            width: 32px;
-            height: 32px;
+            width: 32px; height: 32px;
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: white;
         }
-
         .site-name {
-            font-size: 1.1rem;
-            font-weight: 700;
+            font-size: 1.1rem; font-weight: 700;
             background: linear-gradient(135deg, #3b82f6, #60a5fa);
-            -webkit-background-clip: text;
-            background-clip: text;
+            -webkit-background-clip: text; background-clip: text;
             color: transparent;
         }
 
-        .right-menu {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+        .right-menu { display: flex; align-items: center; gap: 0.6rem; }
+
+        .notif-btn {
+            position: relative;
+            background: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem;
         }
+        .notif-badge {
+            position: absolute;
+            top: -4px; right: -4px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 700;
+            min-width: 16px; height: 16px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 4px;
+        }
+        .notif-badge.hidden { display: none; }
 
         .theme-toggle {
             background: var(--hover-bg);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            width: 32px;
-            height: 32px;
+            width: 32px; height: 32px;
             border-radius: 50%;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             font-size: 0.9rem;
-        }
-
-        .flag-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            object-fit: cover;
-            cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
         .balance-display {
@@ -162,17 +151,13 @@
 
         .sidebar-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            inset: 0;
+            background: rgba(0,0,0,0.5);
             z-index: 2000;
             visibility: hidden;
             opacity: 0;
             transition: all 0.3s ease;
         }
-
         .sidebar-overlay.active { visibility: visible; opacity: 1; }
 
         .sidebar-menu {
@@ -182,13 +167,12 @@
             width: 280px;
             height: 100%;
             background: var(--bg-secondary);
-            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
             z-index: 2001;
             transition: right 0.3s ease;
             display: flex;
             flex-direction: column;
         }
-
         .sidebar-overlay.active .sidebar-menu { right: 0; }
 
         .sidebar-header {
@@ -198,20 +182,14 @@
             align-items: center;
             gap: 0.8rem;
         }
-
         .sidebar-header .avatar-large {
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 1.2rem;
+            flex-shrink: 0;
         }
-
         .sidebar-header .user-info { display: flex; flex-direction: column; overflow: hidden; }
         .sidebar-header .user-name {
             font-weight: 600; font-size: 1rem; color: var(--text-primary);
@@ -238,7 +216,6 @@
             padding: 0.5rem 0;
             overflow-y: auto;
         }
-
         .sidebar-nav a {
             display: block;
             padding: 0.8rem 1.5rem;
@@ -247,15 +224,12 @@
             font-size: 0.9rem;
             font-weight: 500;
         }
-
         .sidebar-nav a:hover { background: var(--hover-bg); color: #3b82f6; }
-
         .sidebar-nav .logout-item {
             margin-top: auto;
             border-top: 1px solid var(--border-color);
             color: #ef4444;
         }
-
         .sidebar-nav .logout-item:hover { background: rgba(239,68,68,0.1); color: #dc2626; }
 
         .trust-bar {
@@ -283,9 +257,27 @@
             padding: 1.5rem;
             color: white;
             margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
-
         .welcome-section h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+        .welcome-section p { font-size: 0.85rem; opacity: 0.9; }
+        .welcome-actions { display: flex; gap: 0.6rem; }
+        .welcome-actions a {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .welcome-actions a:hover { background: rgba(255,255,255,0.25); }
 
         .stats-grid {
             display: grid;
@@ -293,14 +285,15 @@
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
-
         .stat-card {
-            background: var(--stat-bg);
+            background: var(--bg-card);
             border-radius: 16px;
             padding: 1.25rem;
             border: 1px solid var(--border-color);
+            position: relative;
+            transition: border-color 0.2s;
         }
-
+        .stat-card:hover { border-color: #3b82f6; }
         .stat-label {
             font-size: 0.75rem;
             color: var(--text-secondary);
@@ -308,12 +301,17 @@
             letter-spacing: 0.05em;
             margin-bottom: 0.5rem;
         }
-
         .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--text-primary); }
-        .stat-change { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; }
-
-        .positive { color: #10b981; }
-        .negative { color: #ef4444; }
+        .stat-change {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .stat-change.up { color: #10b981; }
+        .stat-change.down { color: #ef4444; }
 
         .dashboard-grid {
             display: grid;
@@ -322,27 +320,21 @@
             margin-bottom: 1.5rem;
         }
 
-        .chart-container, .orderbook-container, .alerts-section, .portfolio-container, .mobile-app-section, .news-section {
+        .card {
             background: var(--bg-card);
             border-radius: 16px;
             border: 1px solid var(--border-color);
             overflow: hidden;
             margin-bottom: 1.5rem;
         }
-
-        .chart-header, .orderbook-header, .alerts-header, .news-header {
+        .card-header {
             padding: 1rem;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
-        .chart-header h3, .orderbook-header h3, .alerts-header h3, .news-header h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
+        .card-header h3 { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
 
         .pair-selector {
             padding: 0.25rem 0.5rem;
@@ -350,26 +342,68 @@
             border-radius: 6px;
             background: var(--bg-card);
             color: var(--text-primary);
+            font-family: inherit;
         }
 
         #tradingview_chart { height: 400px; width: 100%; }
 
         .orderbook-table { width: 100%; font-size: 0.8rem; }
-
         .orderbook-table th, .orderbook-table td {
             padding: 0.5rem 1rem;
             text-align: left;
             color: var(--text-primary);
         }
-
         .orderbook-table th {
             color: var(--text-secondary);
             font-weight: 500;
             border-bottom: 1px solid var(--border-color);
         }
-
         .bid { color: #10b981; }
         .ask { color: #ef4444; }
+
+        /* Portfolio donut + list */
+        .portfolio-flex {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .donut-wrap {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            flex-shrink: 0;
+        }
+        .donut-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .donut-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .donut-center-label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        .donut-center-value { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+
+        .legend { flex: 1; min-width: 200px; }
+        .legend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0;
+            font-size: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .legend-item:last-child { border-bottom: none; }
+        .legend-name { display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); }
+        .legend-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .legend-value { color: var(--text-secondary); font-weight: 500; }
 
         .alert-form {
             padding: 1rem;
@@ -377,7 +411,6 @@
             gap: 0.5rem;
             flex-wrap: wrap;
         }
-
         .alert-form input, .alert-form select {
             padding: 0.5rem;
             border: 1px solid var(--border-color);
@@ -385,8 +418,8 @@
             font-size: 0.8rem;
             background: var(--bg-card);
             color: var(--text-primary);
+            font-family: inherit;
         }
-
         .alert-form button {
             background: #3b82f6;
             color: white;
@@ -394,10 +427,11 @@
             padding: 0.5rem 1rem;
             border-radius: 8px;
             cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 500;
         }
-
         .alert-list { padding: 0 1rem 1rem; }
-
         .alert-item {
             display: flex;
             justify-content: space-between;
@@ -407,7 +441,6 @@
             font-size: 0.8rem;
             color: var(--text-primary);
         }
-
         .delete-alert {
             background: #ef4444;
             color: white;
@@ -418,26 +451,97 @@
             font-size: 0.7rem;
         }
 
-        .portfolio-table { width: 100%; border-collapse: collapse; min-width: 600px; }
-
-        .portfolio-table th {
-            text-align: left;
-            padding: 1rem;
-            background: var(--hover-bg);
+        /* Quick trade widget */
+        .quick-trade-body { padding: 1rem; }
+        .quick-trade-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        .qt-field label {
+            display: block;
+            font-size: 0.7rem;
             color: var(--text-secondary);
-            font-size: 0.75rem;
-            font-weight: 600;
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0.2rem;
         }
+        .qt-field select, .qt-field input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+        }
+        .qt-presets {
+            display: flex;
+            gap: 0.4rem;
+            margin-bottom: 0.8rem;
+        }
+        .qt-presets button {
+            flex: 1;
+            padding: 0.35rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.7rem;
+        }
+        .qt-presets button:hover { background: var(--hover-bg); }
+        .qt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+        .qt-btn {
+            padding: 0.6rem;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .qt-btn.buy { background: #10b981; }
+        .qt-btn.buy:hover { background: #059669; }
+        .qt-btn.sell { background: #ef4444; }
+        .qt-btn.sell:hover { background: #dc2626; }
+        .qt-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .portfolio-table td {
+        /* Activity feed */
+        .activity-list { padding: 0.5rem 1rem 1rem; max-height: 320px; overflow-y: auto; }
+        .activity-item {
+            display: flex;
+            gap: 0.8rem;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.8rem;
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-icon {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .activity-icon.buy { background: rgba(16,185,129,0.15); color: #10b981; }
+        .activity-icon.sell { background: rgba(239,68,68,0.15); color: #ef4444; }
+        .activity-icon.info { background: rgba(59,130,246,0.15); color: #3b82f6; }
+        .activity-body { flex: 1; min-width: 0; }
+        .activity-title { font-weight: 500; color: var(--text-primary); }
+        .activity-sub { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem; }
+
+        .news-item {
             padding: 1rem;
             border-bottom: 1px solid var(--border-color);
-            font-size: 0.85rem;
-            color: var(--text-primary);
+            cursor: pointer;
+            transition: background 0.2s;
         }
-
-        .portfolio-container { overflow-x: auto; }
+        .news-item:hover { background: var(--hover-bg); }
+        .news-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.25rem; color: var(--text-primary); }
+        .news-time { font-size: 0.7rem; color: var(--text-secondary); }
 
         .mobile-app-section {
             background: linear-gradient(135deg, #1a1f36, #0f172a);
@@ -449,23 +553,17 @@
             gap: 1rem;
             padding: 1.5rem;
         }
-
         .qr-code {
-            width: 100px;
-            height: 100px;
+            width: 100px; height: 100px;
             background: white;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             font-size: 0.8rem;
             color: #1a1f36;
             text-align: center;
             padding: 0.5rem;
         }
-
-        .app-buttons { display: flex; gap: 1rem; }
-
+        .app-buttons { display: flex; gap: 1rem; margin-top: 0.5rem; }
         .app-btn {
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
@@ -473,25 +571,8 @@
             border-radius: 8px;
             cursor: pointer;
             color: white;
+            font-family: inherit;
         }
-
-        .news-item {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .news-item:hover { background: var(--hover-bg); }
-
-        .news-title {
-            font-weight: 600;
-            font-size: 0.85rem;
-            margin-bottom: 0.25rem;
-            color: var(--text-primary);
-        }
-
-        .news-time { font-size: 0.7rem; color: var(--text-secondary); }
 
         .btn-small {
             background: #3b82f6;
@@ -501,7 +582,61 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.7rem;
+            font-family: inherit;
         }
+
+        /* Notifications dropdown */
+        .notif-dropdown {
+            position: fixed;
+            top: 60px;
+            right: 1.5rem;
+            width: 320px;
+            max-width: calc(100vw - 2rem);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.3);
+            z-index: 1500;
+            display: none;
+            overflow: hidden;
+        }
+        .notif-dropdown.show { display: block; }
+        .notif-header {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notif-list { max-height: 360px; overflow-y: auto; }
+        .notif-item {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.78rem;
+            color: var(--text-primary);
+        }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item small { color: var(--text-secondary); font-size: 0.65rem; display: block; margin-top: 0.2rem; }
+        .notif-empty { padding: 2rem 1rem; text-align: center; color: var(--text-secondary); font-size: 0.8rem; }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            z-index: 3000;
+            max-width: 320px;
+            box-shadow: 0 10px 30px -8px rgba(0,0,0,0.3);
+        }
+        .toast.success { background: #059669; }
+        .toast.error { background: #dc2626; }
 
         @media (max-width: 1024px) {
             .dashboard-grid { grid-template-columns: 1fr; }
@@ -519,12 +654,11 @@
             #tradingview_chart { height: 280px; }
             .alert-form { flex-direction: column; }
             .alert-form select, .alert-form input, .alert-form button { width: 100%; }
-            .portfolio-table { min-width: 550px; }
+            .portfolio-flex { padding: 1rem; }
+            .donut-wrap { width: 130px; height: 130px; }
             .mobile-app-section { flex-direction: column; text-align: center; }
             .app-buttons { justify-content: center; }
-            .qr-code { width: 70px; height: 70px; }
             .balance-display { font-size: 0.7rem; padding: 0.3rem 0.7rem; }
-            .flag-icon { width: 24px; height: 24px; }
         }
     </style>
 </head>
@@ -536,12 +670,25 @@
         </div>
 
         <div class="right-menu">
-            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="themeToggleBtn">🌙</button>
-            <img src="https://flagcdn.com/w320/us.png" alt="USD" class="flag-icon" onclick="showMessage('Currency: USD')">
+            <button class="notif-btn" onclick="toggleNotifDropdown()" title="Notifications">
+                🔔
+                <span class="notif-badge hidden" id="notifBadge">0</span>
+            </button>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeToggleBtn">🌙</button>
             <div class="balance-display" id="balanceDisplay">$0.00</div>
             <button class="mobile-menu-btn" onclick="openSidebar()">☰</button>
         </div>
     </nav>
+
+    <div id="notifDropdown" class="notif-dropdown">
+        <div class="notif-header">
+            <span>🔔 Notifications</span>
+            <button class="btn-small" onclick="markAllRead()">Clear</button>
+        </div>
+        <div class="notif-list" id="notifList">
+            <div class="notif-empty">No notifications</div>
+        </div>
+    </div>
 
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()">
         <div class="sidebar-menu" onclick="event.stopPropagation()">
@@ -554,16 +701,16 @@
                 <button class="close-sidebar" onclick="closeSidebar()">✕</button>
             </div>
             <div class="sidebar-nav">
-                <a href="dashboard.html" onclick="closeSidebar()">Dashboard</a>
-                <a href="trade.html" onclick="closeSidebar()">Trade</a>
-                <a href="markets.html" onclick="closeSidebar()">Markets</a>
-                <a href="orders.html" onclick="closeSidebar()">Orders</a>
-                <a href="bots.html" onclick="closeSidebar()">Bots</a>
-                <a href="deposit.html" onclick="closeSidebar()">Deposit</a>
-                <a href="withdraw.html" onclick="closeSidebar()">Withdraw</a>
-                <a href="settings.html" onclick="closeSidebar()">Settings</a>
-                <a href="support.html" onclick="closeSidebar()">Support</a>
-                <a href="#" class="logout-item" onclick="logout(); closeSidebar(); return false;">Logout</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="trade.html">Trade</a>
+                <a href="markets.html">Markets</a>
+                <a href="orders.html">Orders</a>
+                <a href="bots.html">Bots</a>
+                <a href="deposit.html">Deposit</a>
+                <a href="withdraw.html">Withdraw</a>
+                <a href="settings.html">Settings</a>
+                <a href="support.html">Support</a>
+                <a href="#" class="logout-item" onclick="logout(); return false;">Logout</a>
             </div>
         </div>
     </div>
@@ -578,36 +725,42 @@
 
     <div class="main-container">
         <div class="welcome-section">
-            <h1 id="welcomeHeading">Welcome back</h1>
-            <p>Deposit funds to start trading</p>
+            <div>
+                <h1 id="welcomeHeading">Welcome back</h1>
+                <p id="welcomeSub">Loading your account…</p>
+            </div>
+            <div class="welcome-actions">
+                <a href="deposit.html">+ Deposit</a>
+                <a href="trade.html">Trade Now</a>
+            </div>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-label">Total Balance</div>
                 <div class="stat-value" id="totalBalance">$0.00</div>
-                <div class="stat-change">Deposit to get started</div>
+                <div class="stat-change" id="balanceChange">Deposit to get started</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">24h Volume</div>
-                <div class="stat-value">$0.00</div>
+                <div class="stat-value" id="totalVolume">$0.00</div>
                 <div class="stat-change">No activity yet</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Total P&L</div>
                 <div class="stat-value" id="totalPnl">$0.00</div>
-                <div class="stat-change">Start trading</div>
+                <div class="stat-change" id="pnlChange">Start trading</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Open Positions</div>
-                <div class="stat-value">0</div>
-                <div class="stat-change">No open positions</div>
+                <div class="stat-label">Open Orders</div>
+                <div class="stat-value" id="openOrdersCount">0</div>
+                <div class="stat-change" id="ordersChange">No open orders</div>
             </div>
         </div>
 
         <div class="dashboard-grid">
-            <div class="chart-container">
-                <div class="chart-header">
+            <div class="card">
+                <div class="card-header">
                     <h3>Trading Chart</h3>
                     <select class="pair-selector" id="chartPair" onchange="changeChartPair()">
                         <option value="BTCUSD">BTC/USD</option>
@@ -619,10 +772,8 @@
                 <div id="tradingview_chart"></div>
             </div>
 
-            <div class="orderbook-container">
-                <div class="orderbook-header">
-                    <h3>Order Book</h3>
-                </div>
+            <div class="card">
+                <div class="card-header"><h3>Order Book</h3></div>
                 <table class="orderbook-table">
                     <thead><tr><th>Price (USD)</th><th>Size</th><th>Total</th></tr></thead>
                     <tbody id="askOrders"></tbody>
@@ -631,8 +782,67 @@
             </div>
         </div>
 
-        <div class="alerts-section">
-            <div class="alerts-header">
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header"><h3>Portfolio Allocation</h3></div>
+                <div class="portfolio-flex">
+                    <div class="donut-wrap">
+                        <svg class="donut-svg" viewBox="0 0 42 42" id="donutSvg">
+                            <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="var(--border-color)" stroke-width="6"></circle>
+                            <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="#6b7280" stroke-width="6" stroke-dasharray="100 100"></circle>
+                        </svg>
+                        <div class="donut-center">
+                            <div class="donut-center-label">Total</div>
+                            <div class="donut-center-value" id="donutTotal">$0</div>
+                        </div>
+                    </div>
+                    <div class="legend" id="portfolioLegend">
+                        <div class="legend-item"><span class="legend-name">Loading…</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3>Quick Trade</h3></div>
+                <div class="quick-trade-body">
+                    <div class="quick-trade-row">
+                        <div class="qt-field">
+                            <label>Pair</label>
+                            <select id="qtPair">
+                                <option value="BTC/USD">BTC/USD</option>
+                                <option value="ETH/USD">ETH/USD</option>
+                                <option value="SOL/USD">SOL/USD</option>
+                                <option value="AVAX/USD">AVAX/USD</option>
+                            </select>
+                        </div>
+                        <div class="qt-field">
+                            <label>Amount (USD)</label>
+                            <input type="number" id="qtAmount" value="10" min="1" step="1">
+                        </div>
+                    </div>
+                    <div class="qt-presets">
+                        <button onclick="setQtAmount(10)">$10</button>
+                        <button onclick="setQtAmount(50)">$50</button>
+                        <button onclick="setQtAmount(100)">$100</button>
+                        <button onclick="setQtAmount(500)">$500</button>
+                    </div>
+                    <div class="qt-actions">
+                        <button class="qt-btn buy" id="qtBuyBtn" onclick="quickTrade('buy')">Buy</button>
+                        <button class="qt-btn sell" id="qtSellBtn" onclick="quickTrade('sell')">Sell</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>Recent Activity</h3></div>
+            <div class="activity-list" id="activityList">
+                <div class="notif-empty">No activity yet</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
                 <h3>Price Alerts</h3>
                 <span style="font-size:0.75rem;color:var(--text-secondary);">Get notified when price hits your target</span>
             </div>
@@ -653,255 +863,484 @@
             <div class="alert-list" id="alertList"></div>
         </div>
 
-        <div class="portfolio-container">
-            <table class="portfolio-table">
+        <div class="card">
+            <table style="width:100%;border-collapse:collapse;min-width:600px;">
                 <thead>
-                    <tr><th>Asset</th><th>Holdings</th><th>Avg. Price</th><th>Current Price</th><th>Value</th><th>P&L</th><th></th></tr>
+                    <tr style="background:var(--hover-bg);">
+                        <th style="text-align:left;padding:1rem;color:var(--text-secondary);font-size:0.75rem;font-weight:600;">Asset</th>
+                        <th style="text-align:left;padding:1rem;color:var(--text-secondary);font-size:0.75rem;font-weight:600;">Holdings</th>
+                        <th style="text-align:left;padding:1rem;color:var(--text-secondary);font-size:0.75rem;font-weight:600;">Value</th>
+                        <th style="text-align:left;padding:1rem;color:var(--text-secondary);font-size:0.75rem;font-weight:600;"></th>
+                    </tr>
                 </thead>
                 <tbody id="portfolioBody">
-                    <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading portfolio…</td></tr>
+                    <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-secondary);">Loading portfolio…</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="mobile-app-section">
+        <div class="card mobile-app-section">
             <div>
                 <h3>Trade on the Go</h3>
-                <p>Download our mobile app for iOS and Android</p>
+                <p style="font-size:0.85rem;opacity:0.85;">Download our mobile app for iOS and Android</p>
                 <div class="app-buttons">
-                    <button class="app-btn" onclick="showMessage('App Store coming soon')">App Store</button>
-                    <button class="app-btn" onclick="showMessage('Google Play coming soon')">Google Play</button>
+                    <button class="app-btn" onclick="showToast('App Store coming soon')">App Store</button>
+                    <button class="app-btn" onclick="showToast('Google Play coming soon')">Google Play</button>
                 </div>
             </div>
             <div class="qr-code">Scan to download</div>
         </div>
 
-        <div class="news-section">
-            <div class="news-header"><h3>Latest Crypto News</h3></div>
+        <div class="card">
+            <div class="card-header"><h3>Latest Crypto News</h3></div>
             <div id="newsFeed"></div>
         </div>
     </div>
 
-    <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // ===== Supabase Init (matches index.html / signup.html / login.html) =====
-        const SUPABASE_URL = 'https://xdwjjfvyowveqcziwssv.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_nd0hfyx5B3XmUaX1nvtu3w_NvZQU5k8';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // ===== Supabase init with guard =====
+        if (!window.__supabaseClient) {
+            const SUPABASE_URL = 'https://xdwjjfvyowveqcziwssv.supabase.co';
+            const SUPABASE_ANON_KEY = 'sb_publishable_nd0hfyx5B3XmUaX1nvtu3w_NvZQU5k8';
+            window.__supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+        const sb = window.__supabaseClient;
 
         let currentUser = null;
-
-        // ===== Auth check + user load =====
-        async function checkAuthAndLoadUser() {
-            const { data: { session } } = await supabase.auth.getSession();
-
-            if (!session) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            currentUser = session.user;
-
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .maybeSingle(); // safer than .single() — won't throw on 0 rows
-
-            if (error) {
-                console.warn('Profile fetch error:', error.message);
-            }
-
-            const display = profile || {
-                full_name: session.user.user_metadata?.full_name
-                    || session.user.email?.split('@')[0]
-                    || 'User',
-                email: session.user.email
-            };
-
-            updateUserDisplay(display);
-            await loadUserBalances(session.user.id);
-        }
-
-        function updateUserDisplay(user) {
-            const fullName = user.full_name || user.email?.split('@')[0] || 'User';
-            const firstName = fullName.split(' ')[0];
-
-            const welcomeH1 = document.getElementById('welcomeHeading');
-            if (welcomeH1) welcomeH1.textContent = `Welcome back, ${firstName}`;
-
-            const sidebarName = document.getElementById('sidebarName');
-            const sidebarEmail = document.getElementById('sidebarEmail');
-            const sidebarAvatar = document.getElementById('sidebarAvatar');
-
-            if (sidebarName) sidebarName.textContent = fullName;
-            if (sidebarEmail) sidebarEmail.textContent = user.email || 'user@example.com';
-            if (sidebarAvatar) {
-                const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-                sidebarAvatar.textContent = initials || 'U';
-            }
-        }
-
-        // ===== Balances =====
-        async function loadUserBalances(userId) {
-            try {
-                const { data: balances, error } = await supabase
-                    .from('user_balances')
-                    .select('asset, balance')
-                    .eq('user_id', userId);
-
-                if (error) {
-                    console.warn('Balances fetch error:', error.message);
-                    useEmptyPortfolio();
-                    return;
-                }
-
-                if (balances && balances.length > 0) {
-                    updatePortfolioWithBalances(balances);
-                } else {
-                    // Trigger should have seeded these — try once, ignore errors
-                    await createDefaultBalances(userId);
-                    useEmptyPortfolio();
-                }
-            } catch (err) {
-                console.error(err);
-                useEmptyPortfolio();
-            }
-        }
-
-        async function createDefaultBalances(userId) {
-            const defaults = ['BTC', 'ETH', 'SOL', 'AVAX', 'USD'].map(asset => ({
-                user_id: userId,
-                asset,
-                balance: 0
-            }));
-            try {
-                const { error } = await supabase
-                    .from('user_balances')
-                    .upsert(defaults, { onConflict: 'user_id,asset', ignoreDuplicates: true });
-                if (error) console.warn('Seeding balances failed:', error.message);
-            } catch (err) {
-                console.warn('Seeding balances error:', err);
-            }
-        }
+        let userBalances = { USD: 0, BTC: 0, ETH: 0, SOL: 0, AVAX: 0 };
+        let userOrders = [];
+        let userTrades = [];
 
         const PRICES = { BTC: 43250, ETH: 2250, SOL: 95.50, AVAX: 38.20, USD: 1 };
         const META = {
-            BTC:  { asset: "Bitcoin",   avgPrice: 38500 },
-            ETH:  { asset: "Ethereum",  avgPrice: 1850  },
-            SOL:  { asset: "Solana",    avgPrice: 85    },
-            AVAX: { asset: "Avalanche", avgPrice: 32    }
+            BTC:  { asset: "Bitcoin",   color: '#f59e0b' },
+            ETH:  { asset: "Ethereum",  color: '#8b5cf6' },
+            SOL:  { asset: "Solana",    color: '#14b8a6' },
+            AVAX: { asset: "Avalanche", color: '#ef4444' }
         };
 
-        function useEmptyPortfolio() {
-            const portfolioData = Object.keys(META).map(symbol => ({
-                asset: META[symbol].asset,
-                symbol,
-                holdings: 0,
-                avgPrice: META[symbol].avgPrice,
-                currentPrice: PRICES[symbol],
-                value: 0,
-                pnl: 0,
-                pnlPercent: 0
-            }));
-            updatePortfolioTable(portfolioData);
-            updateBalanceDisplay(0);
+        function escapeHtml(s) {
+            return String(s || '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
         }
 
-        function updatePortfolioWithBalances(balances) {
-            const usdBalance = Number(balances.find(b => b.asset === 'USD')?.balance || 0);
-            const portfolioData = Object.keys(META).map(symbol => {
-                const bal = balances.find(b => b.asset === symbol);
-                const holdings = Number(bal?.balance || 0);
-                const currentPrice = PRICES[symbol];
-                const avgPrice = META[symbol].avgPrice;
-                const value = holdings * currentPrice;
-                const pnl = value - (holdings * avgPrice);
-                const pnlPercent = holdings > 0
-                    ? ((currentPrice - avgPrice) / avgPrice * 100).toFixed(1)
-                    : 0;
-                return {
-                    asset: META[symbol].asset,
-                    symbol,
-                    holdings,
-                    avgPrice,
-                    currentPrice,
-                    value,
-                    pnl,
-                    pnlPercent
-                };
+        // ===== Auth =====
+        async function init() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) {
+                window.location.replace('login.html');
+                return;
+            }
+            currentUser = session.user;
+
+            const { data: profile } = await sb
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .maybeSingle();
+
+            const display = profile || {
+                full_name: currentUser.user_metadata?.full_name
+                    || currentUser.email?.split('@')[0]
+                    || 'User',
+                email: currentUser.email
+            };
+            updateUserDisplay(display);
+
+            await Promise.all([
+                loadUserBalances(),
+                loadUserOrders(),
+                loadUserTrades(),
+                loadNotifications()
+            ]);
+
+            renderPortfolio();
+            renderActivity();
+            renderQuickTradePrice();
+        }
+
+        function updateUserDisplay(user) {
+            const fullName = user.full_name || 'User';
+            const firstName = fullName.split(' ')[0];
+            const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'U';
+
+            document.getElementById('welcomeHeading').textContent = `Welcome back, ${firstName}`;
+            document.getElementById('welcomeSub').textContent = `Account: ${user.email || ''}`;
+
+            document.getElementById('sidebarName').textContent = fullName;
+            document.getElementById('sidebarEmail').textContent = user.email || '';
+            document.getElementById('sidebarAvatar').textContent = initials;
+        }
+
+        // ===== Data =====
+        async function loadUserBalances() {
+            const { data, error } = await sb
+                .from('user_balances')
+                .select('asset, balance')
+                .eq('user_id', currentUser.id);
+            if (error) { console.error('balances:', error.message); return; }
+            userBalances = { USD: 0, BTC: 0, ETH: 0, SOL: 0, AVAX: 0 };
+            (data || []).forEach(b => { userBalances[b.asset] = Number(b.balance) || 0; });
+            updateBalanceDisplay();
+        }
+
+        async function loadUserOrders() {
+            const { data } = await sb
+                .from('orders')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false });
+            userOrders = data || [];
+            document.getElementById('openOrdersCount').textContent = userOrders.length;
+            document.getElementById('ordersChange').textContent = userOrders.length
+                ? `${userOrders.length} pending`
+                : 'No open orders';
+        }
+
+        async function loadUserTrades() {
+            const { data } = await sb
+                .from('trades')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: false })
+                .limit(20);
+            userTrades = data || [];
+        }
+
+        async function loadNotifications() {
+            const { data } = await sb
+                .from('deposits')
+                .select('id, amount, crypto, status, created_at')
+                .eq('user_id', currentUser.id)
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            const items = [];
+            (data || []).forEach(d => {
+                items.push({
+                    text: `Deposit of $${Number(d.amount).toFixed(2)} ${d.crypto} pending confirmation`,
+                    time: new Date(d.created_at).toLocaleString()
+                });
+            });
+            userOrders.forEach(o => {
+                items.push({
+                    text: `Open ${o.type} order: ${o.amount} ${o.pair.split('/')[0]} @ $${Number(o.price).toLocaleString()}`,
+                    time: new Date(o.created_at).toLocaleString()
+                });
             });
 
-            updatePortfolioTable(portfolioData);
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
 
-            const totalCrypto = portfolioData.reduce((sum, a) => sum + a.value, 0);
-            const total = usdBalance + totalCrypto;
-            document.getElementById('totalBalance').textContent =
-                `$${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            updateBalanceDisplay(usdBalance + totalCrypto);
-        }
+            if (!items.length) {
+                list.innerHTML = '<div class="notif-empty">No notifications</div>';
+                badge.classList.add('hidden');
+                return;
+            }
 
-        function updatePortfolioTable(portfolioData) {
-            const tbody = document.getElementById('portfolioBody');
-            if (!tbody) return;
-
-            tbody.innerHTML = portfolioData.map(asset => `
-                <tr>
-                    <td><strong>${asset.asset}</strong> ${asset.symbol}</td>
-                    <td>${asset.holdings} ${asset.symbol}</td>
-                    <td>$${asset.avgPrice.toLocaleString()}</td>
-                    <td>$${asset.currentPrice.toLocaleString()}</td>
-                    <td>$${asset.value.toLocaleString()}</td>
-                    <td class="${asset.pnl >= 0 ? 'positive' : 'negative'}">
-                        ${asset.pnl >= 0 ? '▲' : '▼'} $${Math.abs(asset.pnl).toLocaleString()} (${Math.abs(asset.pnlPercent)}%)
-                    </td>
-                    <td><button class="btn-small" onclick="location.href='trade.html'">Trade</button></td>
-                </tr>
+            badge.textContent = items.length;
+            badge.classList.remove('hidden');
+            list.innerHTML = items.map(i => `
+                <div class="notif-item">
+                    ${escapeHtml(i.text)}
+                    <small>${escapeHtml(i.time)}</small>
+                </div>
             `).join('');
         }
 
-        function updateBalanceDisplay(amount) {
-            const el = document.getElementById('balanceDisplay');
-            if (el) el.textContent =
-                `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // ===== Display =====
+        function updateBalanceDisplay() {
+            const usdOnly = Number(userBalances.USD || 0);
+
+            // Compute total (USD + crypto holdings valued at current prices)
+            const cryptoTotals = ['BTC','ETH','SOL','AVAX'].reduce((sum, sym) => {
+                return sum + (Number(userBalances[sym] || 0) * PRICES[sym]);
+            }, 0);
+            const total = usdOnly + cryptoTotals;
+
+            document.getElementById('balanceDisplay').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('totalBalance').textContent = `$${total.toFixed(2)}`;
+
+            // P&L from trades
+            let pnl = 0;
+            userTrades.forEach(t => {
+                // crude: profit on sells
+                if (t.type === 'sell' && t.total) {
+                    pnl += Number(t.total) * 0.01;
+                }
+            });
+
+            const pnlEl = document.getElementById('totalPnl');
+            const pnlChange = document.getElementById('pnlChange');
+            pnlEl.textContent = `${pnl >= 0 ? '+' : '-'}$${Math.abs(pnl).toFixed(2)}`;
+            pnlEl.style.color = pnl >= 0 ? 'var(--positive)' : 'var(--negative)';
+
+            const balanceChange = document.getElementById('balanceChange');
+            if (total === 0) {
+                balanceChange.textContent = 'Deposit to get started';
+                balanceChange.className = 'stat-change';
+            } else if (cryptoTotals > 0) {
+                balanceChange.textContent = `$${cryptoTotals.toFixed(2)} in crypto`;
+                balanceChange.className = 'stat-change up';
+            } else {
+                balanceChange.textContent = 'Ready to trade';
+                balanceChange.className = 'stat-change';
+            }
+
+            if (pnl === 0) {
+                pnlChange.textContent = 'Start trading';
+            } else {
+                pnlChange.textContent = pnl >= 0 ? 'Up overall' : 'Down overall';
+                pnlChange.className = `stat-change ${pnl >= 0 ? 'up' : 'down'}`;
+            }
         }
 
-        // ===== Logout =====
-        window.logout = async function() {
-            await supabase.auth.signOut();
-            window.location.href = 'index.html';
-        };
+        function renderPortfolio() {
+            const rows = [];
+            let total = 0;
+            const holdings = [];
 
-        function showMessage(msg) { alert(msg); }
+            ['BTC','ETH','SOL','AVAX'].forEach(sym => {
+                const balance = Number(userBalances[sym] || 0);
+                const value = balance * PRICES[sym];
+                total += value;
+                if (balance > 0) {
+                    holdings.push({ sym, value, color: META[sym].color, asset: META[sym].asset });
+                }
+                rows.push({
+                    asset: META[sym].asset,
+                    symbol: sym,
+                    holdings: balance,
+                    value
+                });
+            });
 
-        // ===== Theme toggle =====
-        window.toggleTheme = function() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const next = current === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', next);
-            localStorage.setItem('bluepeak_theme', next);
-            updateThemeBtn();
-            // Re-init chart to match theme
-            if (typeof initTradingView === 'function') initTradingView();
-        };
+            // Also include USD as "cash"
+            const usdVal = Number(userBalances.USD || 0);
+            total += usdVal;
+            if (usdVal > 0) holdings.push({ sym: 'USD', value: usdVal, color: '#3b82f6', asset: 'Cash (USD)' });
 
-        function updateThemeBtn() {
-            const btn = document.getElementById('themeToggleBtn');
-            if (!btn) return;
-            btn.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙';
+            // Portfolio table
+            const tbody = document.getElementById('portfolioBody');
+            tbody.innerHTML = rows.map(r => `
+                <tr style="border-bottom:1px solid var(--border-color);">
+                    <td style="padding:1rem;color:var(--text-primary);font-size:0.85rem;">
+                        <strong>${escapeHtml(r.asset)}</strong> ${escapeHtml(r.symbol)}
+                    </td>
+                    <td style="padding:1rem;color:var(--text-primary);font-size:0.85rem;">
+                        ${r.holdings.toFixed(6)} ${escapeHtml(r.symbol)}
+                    </td>
+                    <td style="padding:1rem;color:var(--text-primary);font-size:0.85rem;">
+                        $${r.value.toFixed(2)}
+                    </td>
+                    <td style="padding:1rem;">
+                        <a href="trade.html?pair=${escapeHtml(r.symbol)}USD"
+                           style="color:#3b82f6;text-decoration:none;font-size:0.8rem;font-weight:500;">
+                           Trade →
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Donut
+            renderDonut(holdings, total);
+
+            // Legend
+            const legend = document.getElementById('portfolioLegend');
+            if (!holdings.length) {
+                legend.innerHTML = '<div class="legend-item"><span class="legend-name" style="color:var(--text-secondary);">No holdings yet</span></div>';
+                return;
+            }
+            legend.innerHTML = holdings.map(h => `
+                <div class="legend-item">
+                    <span class="legend-name">
+                        <span class="legend-dot" style="background:${h.color}"></span>
+                        ${escapeHtml(h.asset)}
+                    </span>
+                    <span class="legend-value">${total > 0 ? ((h.value / total) * 100).toFixed(1) : 0}%</span>
+                </div>
+            `).join('');
+
+            document.getElementById('donutTotal').textContent = total > 0
+                ? `$${total.toFixed(0)}`
+                : '$0';
         }
-        updateThemeBtn();
 
-        // ===== Sidebar =====
-        window.openSidebar = () => document.getElementById('sidebarOverlay').classList.add('active');
-        window.closeSidebar = () => document.getElementById('sidebarOverlay').classList.remove('active');
+        function renderDonut(holdings, total) {
+            const svg = document.getElementById('donutSvg');
+            if (!holdings.length || total === 0) {
+                svg.innerHTML = `
+                    <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="var(--border-color)" stroke-width="6"></circle>
+                `;
+                return;
+            }
+
+            let offset = 0;
+            const circles = holdings.map(h => {
+                const pct = (h.value / total) * 100;
+                const c = `<circle cx="21" cy="21" r="15.9155" fill="transparent"
+                    stroke="${h.color}" stroke-width="6"
+                    stroke-dasharray="${pct} ${100 - pct}"
+                    stroke-dashoffset="${-offset}"></circle>`;
+                offset += pct;
+                return c;
+            }).join('');
+
+            svg.innerHTML = circles;
+        }
+
+        function renderActivity() {
+            const list = document.getElementById('activityList');
+            if (!userTrades.length) {
+                list.innerHTML = '<div class="notif-empty">No activity yet</div>';
+                return;
+            }
+            list.innerHTML = userTrades.slice(0, 10).map(t => {
+                const isBuy = t.type === 'buy';
+                const cls = isBuy ? 'buy' : 'sell';
+                const icon = isBuy ? '📈' : '📉';
+                return `
+                    <div class="activity-item">
+                        <div class="activity-icon ${cls}">${icon}</div>
+                        <div class="activity-body">
+                            <div class="activity-title">
+                                ${isBuy ? 'Bought' : 'Sold'} ${escapeHtml(String(t.amount))} ${escapeHtml(t.pair.split('/')[0])}
+                            </div>
+                            <div class="activity-sub">
+                                @ $${Number(t.price).toLocaleString()} · ${new Date(t.created_at).toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderQuickTradePrice() {
+            const pair = document.getElementById('qtPair').value;
+            const sym = pair.split('/')[0];
+            const amt = parseFloat(document.getElementById('qtAmount').value) || 0;
+            const price = PRICES[sym] || 0;
+            const qty = price > 0 ? (amt / price).toFixed(6) : '0';
+            // optionally show "≈ 0.00023 BTC" - we skip for now to keep layout
+        }
+
+        // ===== Quick Trade =====
+        window.setQtAmount = function (amt) {
+            document.getElementById('qtAmount').value = amt;
+        };
+
+        window.quickTrade = async function (side) {
+            if (!currentUser) return;
+            const pair = document.getElementById('qtPair').value;
+            const sym = pair.split('/')[0];
+            const amountUsd = parseFloat(document.getElementById('qtAmount').value);
+            if (!amountUsd || amountUsd <= 0) return showToast('Enter a valid amount', 'error');
+
+            const price = PRICES[sym];
+            const qty = amountUsd / price;
+
+            const buyBtn = document.getElementById('qtBuyBtn');
+            const sellBtn = document.getElementById('qtSellBtn');
+            buyBtn.disabled = sellBtn.disabled = true;
+
+            try {
+                const fee = amountUsd * 0.001;
+                const total = amountUsd;
+
+                const { error } = await sb.rpc('execute_trade', {
+                    p_user_id: currentUser.id,
+                    p_pair: pair,
+                    p_type: side,
+                    p_price: price,
+                    p_amount: qty,
+                    p_total: total,
+                    p_fee: fee
+                });
+
+                if (error) {
+                    showToast(error.message, 'error');
+                    return;
+                }
+
+                showToast(`${side.toUpperCase()} ${qty.toFixed(6)} ${sym} @ $${price.toLocaleString()}`, 'success');
+                await Promise.all([
+                    loadUserBalances(),
+                    loadUserTrades(),
+                    loadNotifications()
+                ]);
+                renderPortfolio();
+                renderActivity();
+            } catch (e) {
+                console.error(e);
+                showToast('Trade failed — try again', 'error');
+            } finally {
+                buyBtn.disabled = sellBtn.disabled = false;
+            }
+        };
+
+        // ===== Alerts =====
+        window.addPriceAlert = function () {
+            const coin = document.getElementById('alertCoin').value;
+            const condition = document.getElementById('alertCondition').value;
+            const price = parseFloat(document.getElementById('alertPrice').value);
+            if (!price || price <= 0) { alert('Please enter a valid price'); return; }
+            const arr = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
+            arr.push({ coin, condition, price, triggered: false });
+            localStorage.setItem('priceAlerts', JSON.stringify(arr));
+            renderAlerts();
+            document.getElementById('alertPrice').value = '';
+        };
+
+        window.deleteAlert = function (index) {
+            const arr = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
+            arr.splice(index, 1);
+            localStorage.setItem('priceAlerts', JSON.stringify(arr));
+            renderAlerts();
+        };
+
+        function renderAlerts() {
+            const arr = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
+            const el = document.getElementById('alertList');
+            if (!arr.length) {
+                el.innerHTML = '<p style="padding:1rem;color:var(--text-secondary);font-size:0.8rem;">No alerts set. Create one above.</p>';
+                return;
+            }
+            el.innerHTML = arr.map((a, i) => `
+                <div class="alert-item">
+                    <span>${escapeHtml(a.coin)} ${a.condition === 'above' ? '↑' : '↓'} $${Number(a.price).toLocaleString()}</span>
+                    <button class="delete-alert" onclick="deleteAlert(${i})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        // ===== Order Book =====
+        function updateOrderBook() {
+            const basePrice = PRICES.BTC;
+            const asks = [], bids = [];
+            const seed = Math.floor(Date.now() / 5000);
+            let s = seed;
+            const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+            for (let i = 1; i <= 6; i++) {
+                asks.push({ price: basePrice + i * 5, size: (rnd() * 2).toFixed(3), total: (basePrice + i * 5) * rnd() * 2 });
+                bids.push({ price: basePrice - i * 5, size: (rnd() * 2).toFixed(3), total: (basePrice - i * 5) * rnd() * 2 });
+            }
+            document.getElementById('askOrders').innerHTML = asks.map(a =>
+                `<tr><td class="ask">$${a.price.toFixed(0)}</td><td>${a.size}</td><td>$${parseInt(a.total).toLocaleString()}</td></tr>`
+            ).join('');
+            document.getElementById('bidOrders').innerHTML = bids.map(b =>
+                `<tr><td class="bid">$${b.price.toFixed(0)}</td><td>${b.size}</td><td>$${parseInt(b.total).toLocaleString()}</td></tr>`
+            ).join('');
+        }
 
         // ===== TradingView =====
         let tvWidget = null;
         function initTradingView() {
             const container = document.getElementById('tradingview_chart');
-            if (!container) return;
+            if (!container || typeof TradingView === 'undefined') return;
             container.innerHTML = '';
             const pair = document.getElementById('chartPair').value;
             const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
@@ -925,57 +1364,7 @@
         }
         window.changeChartPair = initTradingView;
 
-        // ===== Order book (mock) =====
-        function updateOrderBook() {
-            const basePrice = PRICES.BTC;
-            const asks = [], bids = [];
-            for (let i = 1; i <= 5; i++) {
-                asks.push({ price: basePrice + i * 5, size: (Math.random() * 2).toFixed(3), total: (basePrice + i * 5) * Math.random() * 2 });
-                bids.push({ price: basePrice - i * 5, size: (Math.random() * 2).toFixed(3), total: (basePrice - i * 5) * Math.random() * 2 });
-            }
-            document.getElementById('askOrders').innerHTML = asks.map(a =>
-                `<tr><td class="ask">$${a.price.toFixed(0)}</td><td>${a.size}</td><td>$${parseInt(a.total).toLocaleString()}</td></tr>`).join('');
-            document.getElementById('bidOrders').innerHTML = bids.map(b =>
-                `<tr><td class="bid">$${b.price.toFixed(0)}</td><td>${b.size}</td><td>$${parseInt(b.total).toLocaleString()}</td></tr>`).join('');
-        }
-
-        // ===== Alerts (localStorage) =====
-        window.addPriceAlert = function() {
-            const coin = document.getElementById('alertCoin').value;
-            const condition = document.getElementById('alertCondition').value;
-            const price = parseFloat(document.getElementById('alertPrice').value);
-            if (!price || price <= 0) { alert('Please enter a valid price'); return; }
-            const arr = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
-            arr.push({ coin, condition, price, triggered: false });
-            localStorage.setItem('priceAlerts', JSON.stringify(arr));
-            renderAlerts();
-            document.getElementById('alertPrice').value = '';
-        };
-
-        window.deleteAlert = function(index) {
-            const arr = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
-            arr.splice(index, 1);
-            localStorage.setItem('priceAlerts', JSON.stringify(arr));
-            renderAlerts();
-        };
-
-        function renderAlerts() {
-            const arr = JSON.parse(localStorage.getItem('priceAlerts') || '[]');
-            const el = document.getElementById('alertList');
-            if (!el) return;
-            if (!arr.length) {
-                el.innerHTML = '<p style="padding:1rem;color:var(--text-secondary);font-size:0.8rem;">No alerts set. Create one above.</p>';
-                return;
-            }
-            el.innerHTML = arr.map((a, i) => `
-                <div class="alert-item">
-                    <span>${a.coin} ${a.condition === 'above' ? '↑' : '↓'} $${a.price.toLocaleString()}</span>
-                    <button class="delete-alert" onclick="deleteAlert(${i})">Delete</button>
-                </div>
-            `).join('');
-        }
-
-        // ===== News (mock) =====
+        // ===== News =====
         const newsData = [
             { title: "Bitcoin surges past $43,000 as institutional inflows continue", time: "2 hours ago", source: "CoinDesk" },
             { title: "Ethereum futures ETF launch expected next week", time: "4 hours ago", source: "Bloomberg" },
@@ -983,26 +1372,85 @@
             { title: "Avalanche partners with major gaming studio", time: "12 hours ago", source: "Decrypt" },
             { title: "Crypto market cap hits $1.8 trillion", time: "1 day ago", source: "CoinGecko" }
         ];
-
         function loadNews() {
             const feed = document.getElementById('newsFeed');
-            if (!feed) return;
             feed.innerHTML = newsData.map(n => `
-                <div class="news-item" onclick="showMessage('Full article coming soon')">
-                    <div class="news-title">${n.title}</div>
-                    <div class="news-time">${n.time} • ${n.source}</div>
+                <div class="news-item" onclick="showToast('Full article coming soon')">
+                    <div class="news-title">${escapeHtml(n.title)}</div>
+                    <div class="news-time">${escapeHtml(n.time)} · ${escapeHtml(n.source)}</div>
                 </div>
             `).join('');
         }
 
+        // ===== Notifications =====
+        window.toggleNotifDropdown = function () {
+            document.getElementById('notifDropdown').classList.toggle('show');
+        };
+        window.markAllRead = function () {
+            document.getElementById('notifList').innerHTML = '<div class="notif-empty">No notifications</div>';
+            document.getElementById('notifBadge').classList.add('hidden');
+        };
+        document.addEventListener('click', function (e) {
+            const dd = document.getElementById('notifDropdown');
+            const btn = e.target.closest('.notif-btn');
+            if (!dd || !btn) {
+                if (dd && !dd.contains(e.target)) dd.classList.remove('show');
+            }
+        });
+
+        // ===== Toast =====
+        function showToast(msg, type) {
+            const t = document.createElement('div');
+            t.className = 'toast' + (type ? ' ' + type : '');
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2800);
+        }
+        window.showToast = showToast;
+
+        // ===== Theme =====
+        window.toggleTheme = function () {
+            const cur = document.documentElement.getAttribute('data-theme');
+            const next = cur === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('bluepeak_theme', next);
+            updateThemeBtn();
+            initTradingView();
+        };
+        function updateThemeBtn() {
+            const btn = document.getElementById('themeToggleBtn');
+            if (!btn) return;
+            btn.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙';
+        }
+
+        // ===== Sidebar =====
+        window.openSidebar = () => document.getElementById('sidebarOverlay').classList.add('active');
+        window.closeSidebar = () => document.getElementById('sidebarOverlay').classList.remove('active');
+
+        window.logout = async function () {
+            await sb.auth.signOut();
+            window.location.replace('index.html');
+        };
+
         // ===== Boot =====
         (async () => {
+            updateThemeBtn();
             updateOrderBook();
             renderAlerts();
             loadNews();
-            setTimeout(() => initTradingView(), 500);
-            setInterval(updateOrderBook, 5000);
-            await checkAuthAndLoadUser();
+            setTimeout(initTradingView, 400);
+            setInterval(updateOrderBook, 8000);
+            await init();
+
+            // Live refresh
+            setInterval(async () => {
+                if (!currentUser) return;
+                await loadUserBalances();
+                await loadUserOrders();
+                await loadNotifications();
+                updateBalanceDisplay();
+                renderPortfolio();
+            }, 15000);
         })();
     </script>
 </body>
