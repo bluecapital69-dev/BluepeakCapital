@@ -683,6 +683,14 @@
             cursor: pointer;
         }
 
+        /* Loading state */
+        .loading-row {
+            text-align: center;
+            color: #94a3b8;
+            padding: 2rem;
+            font-size: 0.85rem;
+        }
+
         @media (max-width: 768px) {
             .nav-buttons {
                 display: none;
@@ -815,7 +823,7 @@
     </section>
 
     <div class="ticker-container">
-        <div class="ticker" id="ticker"></div>
+        <div class="ticker" id="ticker">Loading markets…</div>
     </div>
 
     <!-- Stats Bar -->
@@ -851,10 +859,10 @@
         <div class="market-title">Markets</div>
         
         <div class="market-filters">
-            <button class="filter-btn active" onclick="filterMarkets('all')">All</button>
-            <button class="filter-btn" onclick="filterMarkets('gainers')">Gainers</button>
-            <button class="filter-btn" onclick="filterMarkets('losers')">Losers</button>
-            <button class="filter-btn" onclick="filterMarkets('volume')">Volume</button>
+            <button class="filter-btn active" onclick="filterMarkets('all', this)">All</button>
+            <button class="filter-btn" onclick="filterMarkets('gainers', this)">Gainers</button>
+            <button class="filter-btn" onclick="filterMarkets('losers', this)">Losers</button>
+            <button class="filter-btn" onclick="filterMarkets('volume', this)">Volume</button>
         </div>
 
         <!-- Desktop Table View -->
@@ -870,12 +878,16 @@
                         <th></th>
                     </tr>
                 </thead>
-                <tbody id="tableBody"></tbody>
+                <tbody id="tableBody">
+                    <tr><td colspan="6" class="loading-row">Loading markets…</td></tr>
+                </tbody>
             </table>
         </div>
 
         <!-- Mobile Card View -->
-        <div class="mobile-cards" id="mobileCards"></div>
+        <div class="mobile-cards" id="mobileCards">
+            <div class="loading-row">Loading markets…</div>
+        </div>
     </section>
 
     <section class="app-showcase">
@@ -936,27 +948,28 @@
         <div class="copyright"><p>© 2025 BluepeakCapital. All rights reserved. Member FINRA and SIPC.</p></div>
     </footer>
 
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Hero Background Slider
+        // ===== Supabase Init =====
+        const SUPABASE_URL = 'https://xdwjjfvyowveqcziwssv.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_nd0hfyx5B3XmUaX1nvtu3w_NvZQU5k8';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ===== Hero Background Slider =====
         let currentHeroSlide = 0;
         const heroSlides = document.querySelectorAll('.hero-slide');
         const heroTotalSlides = heroSlides.length;
-        let heroAutoInterval;
 
         function changeHeroSlide() {
             heroSlides[currentHeroSlide].classList.remove('active');
             currentHeroSlide = (currentHeroSlide + 1) % heroTotalSlides;
             heroSlides[currentHeroSlide].classList.add('active');
         }
+        if (heroTotalSlides > 1) setInterval(changeHeroSlide, 5000);
 
-        function startHeroSlider() {
-            heroAutoInterval = setInterval(changeHeroSlide, 5000);
-        }
-
-        startHeroSlider();
-
-        // Market Data
-        const marketData = [
+        // ===== Fallback data (used if Supabase fails/empty) =====
+        const fallbackMarketData = [
             { name: "Bitcoin", symbol: "BTC", icon: "₿", price: 43250, change: 2.4, volume: "28.5B", marketCap: "845B" },
             { name: "Ethereum", symbol: "ETH", icon: "Ξ", price: 2250, change: 1.8, volume: "15.2B", marketCap: "270B" },
             { name: "Solana", symbol: "SOL", icon: "◎", price: 95.50, change: -0.5, volume: "4.2B", marketCap: "42B" },
@@ -971,11 +984,57 @@
             { name: "Litecoin", symbol: "LTC", icon: "Ł", price: 72.80, change: -0.8, volume: "0.6B", marketCap: "5.4B" }
         ];
 
+        let marketData = [...fallbackMarketData];
         let currentMarkets = [...marketData];
+        let liveMode = false;
+        let activeFilter = 'all';
 
+        // ===== Load markets from Supabase =====
+        async function loadMarketsFromSupabase() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('markets')
+                    .select('name, symbol, icon, price, change, volume, market_cap')
+                    .order('market_cap', { ascending: false });
+
+                if (error) {
+                    console.warn('[Supabase] markets fetch failed, using fallback:', error.message);
+                    liveMode = false;
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    console.warn('[Supabase] markets table is empty, using fallback.');
+                    liveMode = false;
+                    return;
+                }
+
+                marketData = data.map(r => ({
+                    name: r.name,
+                    symbol: r.symbol,
+                    icon: r.icon || '•',
+                    price: Number(r.price) || 0,
+                    change: Number(r.change) || 0,
+                    volume: r.volume || '0',
+                    marketCap: r.market_cap || '0'
+                }));
+
+                currentMarkets = [...marketData];
+                liveMode = true;
+                console.log('[Supabase] Loaded', marketData.length, 'markets from DB.');
+            } catch (err) {
+                console.warn('[Supabase] Unexpected error, using fallback:', err);
+                liveMode = false;
+            }
+        }
+
+        // ===== Renderers =====
         function loadMarketTable() {
-            // Desktop Table
             const tbody = document.getElementById('tableBody');
+            if (!currentMarkets.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading-row">No markets available.</td></tr>';
+                return;
+            }
             tbody.innerHTML = currentMarkets.map(crypto => `
                 <tr>
                     <td style="display: flex; align-items: center; gap: 0.5rem;">
@@ -992,13 +1051,15 @@
                     <td><a href="trade.html?pair=${crypto.symbol}USD" class="trade-link">Trade →</a></td>
                 </tr>
             `).join('');
-            
-            // Mobile Cards
             loadMobileCards();
         }
 
         function loadMobileCards() {
             const cardsContainer = document.getElementById('mobileCards');
+            if (!currentMarkets.length) {
+                cardsContainer.innerHTML = '<div class="loading-row">No markets available.</div>';
+                return;
+            }
             cardsContainer.innerHTML = currentMarkets.map(crypto => `
                 <div class="market-card">
                     <div class="card-header">
@@ -1010,32 +1071,27 @@
                             ${crypto.change >= 0 ? '▲' : '▼'} ${Math.abs(crypto.change)}%
                         </div>
                     </div>
-                    <div class="card-row">
-                        <span class="card-label">Price</span>
-                        <span class="card-value">$${crypto.price.toLocaleString()}</span>
-                    </div>
-                    <div class="card-row">
-                        <span class="card-label">24h Volume</span>
-                        <span class="card-value">$${crypto.volume}</span>
-                    </div>
-                    <div class="card-row">
-                        <span class="card-label">Market Cap</span>
-                        <span class="card-value">$${crypto.marketCap}</span>
-                    </div>
-                    <div class="card-trade">
-                        <a href="trade.html?pair=${crypto.symbol}USD" class="trade-link">Trade →</a>
-                    </div>
+                    <div class="card-row"><span class="card-label">Price</span><span class="card-value">$${crypto.price.toLocaleString()}</span></div>
+                    <div class="card-row"><span class="card-label">24h Volume</span><span class="card-value">$${crypto.volume}</span></div>
+                    <div class="card-row"><span class="card-label">Market Cap</span><span class="card-value">$${crypto.marketCap}</span></div>
+                    <div class="card-trade"><a href="trade.html?pair=${crypto.symbol}USD" class="trade-link">Trade →</a></div>
                 </div>
             `).join('');
         }
 
         function loadTicker() {
             const ticker = document.getElementById('ticker');
+            if (!marketData.length) {
+                ticker.textContent = 'Markets unavailable';
+                return;
+            }
             const items = marketData.map(c => `${c.name} $${c.price.toLocaleString()} ${c.change >= 0 ? '▲' : '▼'} ${Math.abs(c.change)}%`).join('  •  ');
             ticker.innerHTML = items + '  •  ' + items;
         }
 
-        function filterMarkets(type) {
+        // ===== Filters (BUG FIX: pass `this` from onclick) =====
+        function filterMarkets(type, btn) {
+            activeFilter = type;
             if (type === 'gainers') {
                 currentMarkets = [...marketData].sort((a, b) => b.change - a.change);
             } else if (type === 'losers') {
@@ -1045,8 +1101,8 @@
             } else {
                 currentMarkets = [...marketData];
             }
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
             loadMarketTable();
         }
 
@@ -1058,21 +1114,33 @@
             alert(msg);
         }
 
-        loadMarketTable();
-        loadTicker();
-
-        setInterval(() => {
-            marketData.forEach(crypto => {
-                const change = (Math.random() - 0.5) * 2;
-                crypto.price = Math.max(0.01, crypto.price * (1 + change / 100));
-                crypto.change = parseFloat((Math.random() * 4 - 1).toFixed(1));
-            });
-            currentMarkets = [...marketData];
-            loadMarketTable();
+        // ===== Boot =====
+        (async () => {
+            await loadMarketsFromSupabase();
+            // Re-apply active filter after data load
+            if (activeFilter !== 'all') {
+                filterMarkets(activeFilter, document.querySelector('.filter-btn.active'));
+            } else {
+                loadMarketTable();
+            }
             loadTicker();
-            const volumes = ['2.8B', '3.1B', '2.9B', '3.2B', '2.7B', '3.0B'];
-            document.getElementById('totalVolume').innerHTML = `$${volumes[Math.floor(Math.random() * volumes.length)]}`;
-        }, 10000);
+
+            // Only simulate fake price moves when NOT connected to Supabase
+            if (!liveMode) {
+                setInterval(() => {
+                    marketData.forEach(crypto => {
+                        const change = (Math.random() - 0.5) * 2;
+                        crypto.price = Math.max(0.01, crypto.price * (1 + change / 100));
+                        crypto.change = parseFloat((Math.random() * 4 - 1).toFixed(1));
+                    });
+                    currentMarkets = [...marketData];
+                    loadMarketTable();
+                    loadTicker();
+                    const volumes = ['2.8B', '3.1B', '2.9B', '3.2B', '2.7B', '3.0B'];
+                    document.getElementById('totalVolume').innerHTML = `$${volumes[Math.floor(Math.random() * volumes.length)]}`;
+                }, 10000);
+            }
+        })();
     </script>
 </body>
 </html>
